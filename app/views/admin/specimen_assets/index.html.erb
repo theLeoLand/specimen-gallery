@@ -31,6 +31,11 @@
                   Needs review
                 </span>
               <% end %>
+              <% if specimen.bg_removed? %>
+                <span class="inline-block px-2 py-0.5 bg-violet-100 text-violet-800 rounded text-xs font-medium">
+                  Cutout generated
+                </span>
+              <% end %>
             </div>
 
             <% if specimen.common_name.present? %>

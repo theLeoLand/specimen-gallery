@@ -9,6 +9,15 @@
 - `needs_review` flag for unverified names
 - Admin queue shows GBIF verification status
 
+### Cloudinary Background Removal ✅
+- Optional "Remove background automatically (beta)" checkbox on upload form
+- Accepts any image format (JPG, PNG, HEIC, WebP) when enabled
+- Sends image to Cloudinary for AI background removal
+- Downloads transformed PNG with transparency
+- Stores metadata: `bg_removed`, `cloudinary_public_id`, `cloudinary_asset_url`
+- **Graceful fallback:** If Cloudinary fails, attaches original image and sets `needs_review = true`
+- Admin queue shows "Cutout generated" badge for processed images
+
 ---
 
 ## Future Steps

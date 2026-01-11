@@ -73,11 +73,23 @@
       <%= f.label :image, class: "block text-sm font-medium text-stone-700 mb-2" %>
       <div class="relative">
         <%= f.file_field :image,
-          accept: "image/png,image/webp",
+          accept: "image/png,image/webp,image/jpeg,image/heic",
           required: true,
           class: "block w-full text-sm text-stone-600 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-amber-100 file:text-amber-800 hover:file:bg-amber-200 file:cursor-pointer cursor-pointer" %>
       </div>
-      <p class="mt-2 text-xs text-stone-500">PNG or WebP with transparent background. Minimum 512×512 pixels.</p>
+      <p class="mt-2 text-xs text-stone-500">PNG or WebP with transparent background, or use background removal below.</p>
+    </div>
+
+    <div class="p-4 bg-stone-100 border border-stone-200 rounded-xl">
+      <label class="flex items-start gap-3 cursor-pointer">
+        <%= check_box_tag "specimen_asset[remove_background]", "1", false,
+          class: "mt-1 w-4 h-4 text-amber-600 border-stone-300 rounded focus:ring-amber-500" %>
+        <div>
+          <span class="text-sm font-medium text-stone-700">Remove background automatically</span>
+          <span class="ml-1 text-xs px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded">beta</span>
+          <p class="text-xs text-stone-500 mt-1">Upload any photo (JPG, PNG, HEIC, WebP) — we'll cut it out into a transparent PNG.</p>
+        </div>
+      </label>
     </div>
 
     <div class="pt-4">

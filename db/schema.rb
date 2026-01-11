@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_06_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_06_020000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -45,6 +45,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_06_010000) do
   create_table "specimen_assets", force: :cascade do |t|
     t.string "attribution_name"
     t.string "attribution_url"
+    t.boolean "bg_removed", default: false, null: false
+    t.text "cloudinary_asset_url"
+    t.string "cloudinary_public_id"
     t.string "common_name"
     t.datetime "created_at", null: false
     t.string "license"
@@ -54,6 +57,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_06_010000) do
     t.string "status"
     t.bigint "taxon_id"
     t.datetime "updated_at", null: false
+    t.index ["bg_removed"], name: "index_specimen_assets_on_bg_removed"
     t.index ["needs_review"], name: "index_specimen_assets_on_needs_review"
     t.index ["sha256_hash"], name: "index_specimen_assets_on_sha256_hash", unique: true
     t.index ["taxon_id"], name: "index_specimen_assets_on_taxon_id"
