@@ -2,6 +2,10 @@
 Rails.application.routes.draw do
   root "taxa#index"
 
+  # Static pages
+  get "about", to: "pages#about"
+  get "terms", to: "pages#terms"
+
   resources :taxa, only: %i[index show] do
     collection do
       get :suggest
