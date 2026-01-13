@@ -9,7 +9,7 @@
   <%= form_with url: taxa_path, method: :get, class: "max-w-md mx-auto mb-12" do |f| %>
     <div class="relative">
       <%= text_field_tag :q, params[:q],
-        placeholder: "Search by scientific name...",
+        placeholder: "Search by name...",
         class: "w-full pl-12 pr-4 py-3 bg-white border border-stone-300 rounded-full text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-shadow" %>
       <div class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

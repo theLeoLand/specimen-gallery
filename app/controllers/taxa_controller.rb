@@ -4,7 +4,12 @@ class TaxaController < ApplicationController
     @taxa = Taxon.with_approved_assets
 
     if params[:q].present?
-      @taxa = @taxa.where("scientific_name ILIKE ?", "%#{params[:q]}%")
+      search_term = "%#{params[:q]}%"
+      # Search scientific_name on taxon OR common_name on any approved specimen
+      @taxa = @taxa
+        .left_joins(:specimen_assets)
+        .where("taxa.scientific_name ILIKE :q OR specimen_assets.common_name ILIKE :q", q: search_term)
+        .distinct
     end
 
     @taxa = @taxa.order(:scientific_name)
