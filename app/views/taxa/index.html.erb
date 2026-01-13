@@ -1,12 +1,12 @@
 <div class="w-full">
   <div class="text-center mb-12">
-    <h1 class="font-serif text-5xl text-stone-900 mb-4">Specimen Gallery</h1>
+    <h1 class="font-serif text-5xl text-stone-900 mb-4">Browse Collection</h1>
     <p class="text-lg text-stone-600 max-w-xl mx-auto">
-      A collection of high-quality, transparent-background specimens for scientific illustration and education.
+      Search and explore all specimens in the gallery.
     </p>
   </div>
 
-  <%= form_with url: taxa_path, method: :get, class: "max-w-md mx-auto mb-12" do |f| %>
+  <%= form_with url: browse_path, method: :get, class: "max-w-md mx-auto mb-12" do |f| %>
     <div class="relative">
       <%= text_field_tag :q, params[:q],
         placeholder: "Search by name...",
@@ -47,7 +47,7 @@
       <div class="text-6xl mb-4">🔍</div>
       <p class="text-lg text-stone-600 mb-2">No specimens found</p>
       <% if params[:q].present? %>
-        <p class="text-sm text-stone-500">Try a different search term or <%= link_to "view all", taxa_path, class: "text-amber-600 hover:underline" %></p>
+        <p class="text-sm text-stone-500">Try a different search term or <%= link_to "view all", browse_path, class: "text-amber-600 hover:underline" %></p>
       <% else %>
         <p class="text-sm text-stone-500">Be the first to <%= link_to "upload a specimen", new_specimen_asset_path, class: "text-amber-600 hover:underline" %>!</p>
       <% end %>

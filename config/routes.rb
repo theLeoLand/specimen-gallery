@@ -1,12 +1,14 @@
 # config/routes.rb
 Rails.application.routes.draw do
-  root "taxa#index"
+  root "pages#home"
 
   # Static pages
   get "about", to: "pages#about"
   get "terms", to: "pages#terms"
+  get "browse", to: "taxa#index", as: :browse
+  get "taxa", to: redirect("/browse")  # Redirect old URL
 
-  resources :taxa, only: %i[index show] do
+  resources :taxa, only: %i[show] do
     collection do
       get :suggest
     end
