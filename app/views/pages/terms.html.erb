@@ -1,80 +1,79 @@
 <div class="max-w-2xl mx-auto">
-  <h1 class="font-serif text-4xl text-stone-900 mb-6">Terms</h1>
+  <h1 class="font-serif text-4xl text-stone-900 dark:text-stone-100 mb-6">Terms</h1>
 
-  <p class="text-stone-600 mb-8">
+  <p class="text-stone-600 dark:text-stone-300 mb-8">
     By using Specimen Gallery, you agree to the following terms. We've kept them short and readable.
   </p>
 
   <section class="mb-8">
-    <h2 class="font-serif text-xl text-stone-800 mb-3">1. User content & rights</h2>
-    <ul class="space-y-2 text-stone-600">
+    <h2 class="font-serif text-xl text-stone-800 dark:text-stone-200 mb-3">1. User content & rights</h2>
+    <ul class="space-y-2 text-stone-600 dark:text-stone-300">
       <li class="flex gap-2">
-        <span class="text-stone-400">—</span>
+        <span class="text-stone-400 dark:text-stone-500">—</span>
         <span>You confirm that you have the right to upload and license any content you submit.</span>
       </li>
       <li class="flex gap-2">
-        <span class="text-stone-400">—</span>
+        <span class="text-stone-400 dark:text-stone-500">—</span>
         <span>By uploading, you grant the public a license to use your content under the terms you select (CC0 or CC-BY).</span>
       </li>
       <li class="flex gap-2">
-        <span class="text-stone-400">—</span>
+        <span class="text-stone-400 dark:text-stone-500">—</span>
         <span>We may store, display, and distribute your submissions as part of the gallery.</span>
       </li>
     </ul>
   </section>
 
   <section class="mb-8">
-    <h2 class="font-serif text-xl text-stone-800 mb-3">2. Acceptable use</h2>
-    <ul class="space-y-2 text-stone-600">
+    <h2 class="font-serif text-xl text-stone-800 dark:text-stone-200 mb-3">2. Acceptable use</h2>
+    <ul class="space-y-2 text-stone-600 dark:text-stone-300">
       <li class="flex gap-2">
-        <span class="text-stone-400">—</span>
+        <span class="text-stone-400 dark:text-stone-500">—</span>
         <span>No illegal content, harassment, spam, or malware.</span>
       </li>
       <li class="flex gap-2">
-        <span class="text-stone-400">—</span>
+        <span class="text-stone-400 dark:text-stone-500">—</span>
         <span>No copyrighted material unless you own the rights or have permission.</span>
       </li>
       <li class="flex gap-2">
-        <span class="text-stone-400">—</span>
+        <span class="text-stone-400 dark:text-stone-500">—</span>
         <span>No misleading taxonomy or intentionally incorrect information.</span>
       </li>
     </ul>
   </section>
 
   <section class="mb-8">
-    <h2 class="font-serif text-xl text-stone-800 mb-3">3. Moderation</h2>
-    <p class="text-stone-600">
+    <h2 class="font-serif text-xl text-stone-800 dark:text-stone-200 mb-3">3. Moderation</h2>
+    <p class="text-stone-600 dark:text-stone-300">
       We review submissions before they appear publicly. We may approve, reject, or remove content at our discretion, without notice, for any reason including quality, accuracy, or policy concerns.
     </p>
   </section>
 
   <section class="mb-8">
-    <h2 class="font-serif text-xl text-stone-800 mb-3">4. Attribution (CC-BY)</h2>
-    <p class="text-stone-600">
+    <h2 class="font-serif text-xl text-stone-800 dark:text-stone-200 mb-3">4. Attribution (CC-BY)</h2>
+    <p class="text-stone-600 dark:text-stone-300">
       If you use CC-BY licensed content, you must provide credit to the contributor. This typically means including the contributor's name and a link to the source when you use the image.
     </p>
   </section>
 
   <section class="mb-8">
-    <h2 class="font-serif text-xl text-stone-800 mb-3">5. Disclaimer</h2>
-    <p class="text-stone-600">
+    <h2 class="font-serif text-xl text-stone-800 dark:text-stone-200 mb-3">5. Disclaimer</h2>
+    <p class="text-stone-600 dark:text-stone-300">
       Specimen Gallery is provided "as is" without warranties of any kind. Taxonomic information may be inaccurate or outdated. Content is intended for educational and illustrative purposes. We are not responsible for how you use images from this gallery.
     </p>
   </section>
 
   <section class="mb-8">
-    <h2 class="font-serif text-xl text-stone-800 mb-3">6. Takedown & contact</h2>
-    <p class="text-stone-600">
+    <h2 class="font-serif text-xl text-stone-800 dark:text-stone-200 mb-3">6. Takedown & contact</h2>
+    <p class="text-stone-600 dark:text-stone-300">
       If you believe content infringes your rights or violates these terms, please contact us at
-      <a href="mailto:<%= ENV.fetch('CONTACT_EMAIL', 'support@specimengallery.org') %>" class="text-amber-600 hover:underline"><%= ENV.fetch('CONTACT_EMAIL', 'support@specimengallery.org') %></a>.
+      <a href="mailto:<%= ENV.fetch('CONTACT_EMAIL', 'support@specimengallery.org') %>" class="text-amber-600 dark:text-amber-500 hover:underline"><%= ENV.fetch('CONTACT_EMAIL', 'support@specimengallery.org') %></a>.
       We will review and respond to valid requests.
     </p>
   </section>
 
-  <div class="pt-6 border-t border-stone-200">
-    <p class="text-sm text-stone-500">
+  <div class="pt-6 border-t border-stone-200 dark:border-stone-700">
+    <p class="text-sm text-stone-500 dark:text-stone-400">
       Last updated: January 2026
     </p>
   </div>
 </div>
-

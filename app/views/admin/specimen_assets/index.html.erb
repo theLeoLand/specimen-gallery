@@ -1,10 +1,10 @@
 <div class="w-full">
   <div class="flex items-center justify-between mb-8">
     <div>
-      <h1 class="font-serif text-4xl text-stone-900">Pending Queue</h1>
-      <p class="text-stone-600 mt-1">Review and moderate specimen submissions</p>
+      <h1 class="font-serif text-4xl text-stone-900 dark:text-stone-100">Pending Queue</h1>
+      <p class="text-stone-600 dark:text-stone-400 mt-1">Review and moderate specimen submissions</p>
     </div>
-    <span class="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-medium">
+    <span class="px-3 py-1 bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 rounded-full text-sm font-medium">
       <%= @specimen_assets.count %> pending
     </span>
   </div>
@@ -12,8 +12,8 @@
   <% if @specimen_assets.any? %>
     <div class="space-y-4">
       <% @specimen_assets.each do |specimen| %>
-        <div class="bg-white border border-stone-200 rounded-2xl p-6 flex items-center gap-6">
-          <div class="w-24 h-24 flex-shrink-0 bg-gradient-to-br from-stone-100 to-stone-200 rounded-xl overflow-hidden">
+        <div class="bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-2xl p-6 flex items-center gap-6">
+          <div class="w-24 h-24 flex-shrink-0 bg-gradient-to-br from-stone-100 to-stone-200 dark:from-stone-700 dark:to-stone-600 rounded-xl overflow-hidden">
             <% if specimen.image.attached? %>
               <%= image_tag specimen.image,
                 alt: specimen.scientific_name,
@@ -23,41 +23,41 @@
 
           <div class="flex-grow min-w-0">
             <div class="flex items-center gap-2 mb-1">
-              <h3 class="font-medium text-stone-900 truncate">
+              <h3 class="font-medium text-stone-900 dark:text-stone-100 truncate">
                 <em><%= specimen.taxon&.scientific_name || "Unknown" %></em>
               </h3>
               <% if specimen.needs_review? %>
-                <span class="inline-block px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-xs font-medium">
+                <span class="inline-block px-2 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 rounded text-xs font-medium">
                   Needs review
                 </span>
               <% end %>
               <% if specimen.bg_removed? %>
-                <span class="inline-block px-2 py-0.5 bg-violet-100 text-violet-800 rounded text-xs font-medium">
+                <span class="inline-block px-2 py-0.5 bg-violet-100 dark:bg-violet-900/50 text-violet-800 dark:text-violet-300 rounded text-xs font-medium">
                   Cutout generated
                 </span>
               <% end %>
             </div>
 
             <% if specimen.common_name.present? %>
-              <p class="text-sm text-stone-600 truncate"><%= specimen.common_name %></p>
+              <p class="text-sm text-stone-600 dark:text-stone-400 truncate"><%= specimen.common_name %></p>
             <% end %>
 
             <% if specimen.taxon&.gbif_key.present? %>
-              <p class="text-xs text-emerald-700 mt-1">
+              <p class="text-xs text-emerald-700 dark:text-emerald-400 mt-1">
                 ✓ GBIF: <%= specimen.taxon.gbif_canonical_name %>
                 (<%= specimen.taxon.gbif_rank&.downcase %>)
-                <span class="text-stone-400">confidence <%= specimen.taxon.gbif_confidence %>%</span>
+                <span class="text-stone-400 dark:text-stone-500">confidence <%= specimen.taxon.gbif_confidence %>%</span>
               </p>
             <% else %>
-              <p class="text-xs text-amber-600 mt-1">
+              <p class="text-xs text-amber-600 dark:text-amber-400 mt-1">
                 ⚠ Not verified in GBIF
               </p>
             <% end %>
 
-            <p class="text-xs text-stone-500 mt-1">
+            <p class="text-xs text-stone-500 dark:text-stone-400 mt-1">
               Submitted <%= time_ago_in_words(specimen.created_at) %> ago
               · License:
-              <span class="inline-block px-1.5 py-0.5 bg-stone-100 rounded text-xs">
+              <span class="inline-block px-1.5 py-0.5 bg-stone-100 dark:bg-stone-700 text-stone-700 dark:text-stone-300 rounded text-xs">
                 <%= specimen.license == "CC0" ? "CC0" : "CC-BY" %>
               </span>
             </p>
@@ -73,7 +73,7 @@
             <%= button_to admin_specimen_asset_path(specimen),
               method: :delete,
               data: { turbo_confirm: "Reject and delete this specimen?" },
-              class: "px-4 py-2 bg-red-100 text-red-700 text-sm font-medium rounded-full hover:bg-red-200 transition-colors" do %>
+              class: "px-4 py-2 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-sm font-medium rounded-full hover:bg-red-200 dark:hover:bg-red-900 transition-colors" do %>
               ✗ Reject
             <% end %>
           </div>
@@ -81,11 +81,10 @@
       <% end %>
     </div>
   <% else %>
-    <div class="text-center py-16 bg-white border border-stone-200 rounded-2xl">
+    <div class="text-center py-16 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-2xl">
       <div class="text-6xl mb-4">✨</div>
-      <p class="text-lg text-stone-600 mb-2">Queue is empty</p>
-      <p class="text-sm text-stone-500">No specimens pending review.</p>
+      <p class="text-lg text-stone-600 dark:text-stone-300 mb-2">Queue is empty</p>
+      <p class="text-sm text-stone-500 dark:text-stone-400">No specimens pending review.</p>
     </div>
   <% end %>
 </div>
-
