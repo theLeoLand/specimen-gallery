@@ -99,3 +99,4 @@ class CloudinaryBackgroundRemover
   end
 end
 
+
