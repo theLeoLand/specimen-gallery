@@ -20,18 +20,43 @@ class SpecimenAssetsController < ApplicationController
     @specimen_asset.status = "pending"
     @specimen_asset.needs_review = !is_good_match
 
+    # Check file size before attempting Cloudinary (10MB limit on free tier)
+    if uploaded_file.present? && uploaded_file.size > 10.megabytes
+      @specimen_asset.errors.add(:image, "is too large (#{(uploaded_file.size / 1.megabyte.to_f).round(1)}MB). Maximum is 10MB.")
+      flash.now[:alert] = "Image too large. Please use a smaller file (under 10MB)."
+      render :new, status: :unprocessable_entity
+      return
+    end
+
     # Handle image attachment with optional background removal
     bg_removal_failed = false
+    bg_removal_total_fail = false
+    
     if remove_background && uploaded_file.present?
-      bg_removal_failed = !attach_with_background_removal(uploaded_file)
+      result = attach_with_background_removal(uploaded_file)
+      if result == true
+        # Success - bg removed
+      elsif result == false
+        # Partial fail - fell back to original PNG/WebP
+        bg_removal_failed = true
+      else
+        # Total fail - couldn't process and can't fallback (e.g., JPG with no bg removal)
+        bg_removal_total_fail = true
+      end
     elsif uploaded_file.present?
       @specimen_asset.image.attach(uploaded_file)
     end
 
-    # Flag for review if background removal failed
+    # Flag for review if background removal failed but we have a fallback
     if bg_removal_failed
       @specimen_asset.needs_review = true
       flash[:alert] = "Background removal failed — submitted original image for review."
+    end
+    
+    # If total failure, render form with errors (the specific error is already in @specimen_asset.errors)
+    if bg_removal_total_fail
+      render :new, status: :unprocessable_entity
+      return
     end
 
     if @specimen_asset.save
@@ -99,38 +124,77 @@ class SpecimenAssetsController < ApplicationController
     true
   rescue CloudinaryBackgroundRemover::RemovalError => e
     Rails.logger.warn("Background removal failed: #{e.message}")
-
-    # Fallback: attach original file from our saved copy
-    original_tempfile.rewind
-    original_data = original_tempfile.read
-    @specimen_asset.image.attach(
-      io: StringIO.new(original_data),
-      filename: uploaded_file.original_filename,
-      content_type: uploaded_file.content_type
-    )
-    @specimen_asset.bg_removed = false
-    original_tempfile.close rescue nil
-    original_tempfile.unlink rescue nil
-
-    false
-  rescue => e
-    Rails.logger.error("Unexpected error during background removal: #{e.class} - #{e.message}")
-
-    # Fallback: attach original file from our saved copy
-    if original_tempfile && !original_tempfile.closed?
+    cleanup_tempfile(original_tempfile)
+    
+    # Only fallback to original if it's PNG/WebP (otherwise it would fail validation anyway)
+    # Extract a user-friendly error message
+    error_msg = extract_cloudinary_error(e.message)
+    
+    if uploaded_file.content_type.in?(%w[image/png image/webp])
+      original_tempfile = Tempfile.new(["original", File.extname(uploaded_file.original_filename)])
+      original_tempfile.binmode
+      uploaded_file.rewind rescue nil
+      original_tempfile.write(uploaded_file.read)
       original_tempfile.rewind
-      original_data = original_tempfile.read
+      
       @specimen_asset.image.attach(
-        io: StringIO.new(original_data),
+        io: StringIO.new(original_tempfile.read),
         filename: uploaded_file.original_filename,
         content_type: uploaded_file.content_type
       )
-      original_tempfile.close rescue nil
-      original_tempfile.unlink rescue nil
+      @specimen_asset.bg_removed = false
+      cleanup_tempfile(original_tempfile)
+      false # indicates bg removal failed but we have a fallback
+    else
+      # Can't fallback - add specific error
+      @specimen_asset.errors.add(:image, error_msg)
+      nil
     end
-    @specimen_asset.bg_removed = false
+  rescue => e
+    Rails.logger.error("Unexpected error during background removal: #{e.class} - #{e.message}")
+    cleanup_tempfile(original_tempfile)
+    
+    # Extract a user-friendly error message
+    error_msg = extract_cloudinary_error(e.message)
+    
+    # Same logic: only fallback if original is PNG/WebP
+    if uploaded_file.content_type.in?(%w[image/png image/webp])
+      original_tempfile = Tempfile.new(["original", File.extname(uploaded_file.original_filename)])
+      original_tempfile.binmode
+      uploaded_file.rewind rescue nil
+      original_tempfile.write(uploaded_file.read)
+      original_tempfile.rewind
+      
+      @specimen_asset.image.attach(
+        io: StringIO.new(original_tempfile.read),
+        filename: uploaded_file.original_filename,
+        content_type: uploaded_file.content_type
+      )
+      @specimen_asset.bg_removed = false
+      cleanup_tempfile(original_tempfile)
+      false
+    else
+      @specimen_asset.errors.add(:image, error_msg)
+      nil
+    end
+  end
+  
+  def cleanup_tempfile(tempfile)
+    return unless tempfile
+    tempfile.close rescue nil
+    tempfile.unlink rescue nil
+  end
 
-    false
+  def extract_cloudinary_error(message)
+    if message.include?("File size too large")
+      "is too large for background removal. Please use a smaller file (under 10MB) or upload a PNG/WebP directly."
+    elsif message.include?("Invalid image")
+      "could not be processed. Please try a different image."
+    elsif message.include?("effect")
+      "background removal service unavailable. Please upload a PNG/WebP with transparent background instead."
+    else
+      "background removal failed. Please try again or upload a PNG/WebP with transparent background."
+    end
   end
 
   def generate_png_filename(uploaded_file)

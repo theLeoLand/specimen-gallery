@@ -12,6 +12,7 @@ class SpecimenAsset < ApplicationRecord
   validate :image_not_duplicate
   validate :cc_by_requires_attribution
   validate :image_content_type
+  validate :image_file_size
 
   before_validation :default_status
   before_validation :compute_sha256_hash
@@ -41,6 +42,15 @@ class SpecimenAsset < ApplicationRecord
 
     unless image.blob.content_type.in?(%w[image/png image/webp])
       errors.add(:image, "must be PNG or WebP")
+    end
+  end
+
+  def image_file_size
+    return unless image.attached?
+    
+    max_size = 10.megabytes
+    if image.blob.byte_size > max_size
+      errors.add(:image, "is too large (#{(image.blob.byte_size / 1.megabyte.to_f).round(1)}MB). Maximum is 10MB.")
     end
   end
 

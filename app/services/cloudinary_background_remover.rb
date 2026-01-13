@@ -22,9 +22,12 @@ class CloudinaryBackgroundRemover
     validate_file!
     upload_and_transform!
     self
-  rescue Cloudinary::Api::Error, Cloudinary::CarrierWave::UploadError => e
+  rescue Cloudinary::Api::Error => e
+    Rails.logger.error("CloudinaryBackgroundRemover: Cloudinary API error - #{e.class}: #{e.message}")
     raise RemovalError, "Cloudinary upload failed: #{e.message}"
   rescue => e
+    Rails.logger.error("CloudinaryBackgroundRemover: Unexpected error - #{e.class}: #{e.message}")
+    Rails.logger.error(e.backtrace.first(5).join("\n"))
     raise RemovalError, "Background removal failed: #{e.message}"
   end
 
@@ -59,7 +62,8 @@ class CloudinaryBackgroundRemover
   def upload_and_transform!
     # Upload to Cloudinary with background removal
     # Using the 'background_removal' effect which requires Cloudinary AI add-on
-    # Fallback: use 'e_background_removal' transformation
+    Rails.logger.info("CloudinaryBackgroundRemover: Starting upload to Cloudinary...")
+    
     result = Cloudinary::Uploader.upload(
       file_path,
       folder: "specimen_gallery/uploads",
@@ -70,6 +74,8 @@ class CloudinaryBackgroundRemover
         { quality: "auto:best" }
       ]
     )
+    
+    Rails.logger.info("CloudinaryBackgroundRemover: Upload successful, public_id=#{result['public_id']}")
 
     @public_id = result["public_id"]
     @original_url = result["secure_url"]
