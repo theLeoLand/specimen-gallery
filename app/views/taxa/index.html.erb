@@ -1,7 +1,7 @@
 <div class="w-full">
   <div class="text-center mb-12">
-    <h1 class="font-serif text-5xl text-stone-900 mb-4">Browse Collection</h1>
-    <p class="text-lg text-stone-600 max-w-xl mx-auto">
+    <h1 class="font-serif text-5xl text-stone-900 dark:text-stone-100 mb-4">Browse Collection</h1>
+    <p class="text-lg text-stone-600 dark:text-stone-400 max-w-xl mx-auto">
       Search and explore all specimens in the gallery.
     </p>
   </div>
@@ -10,8 +10,8 @@
     <div class="relative">
       <%= text_field_tag :q, params[:q],
         placeholder: "Search by name...",
-        class: "w-full pl-12 pr-4 py-3 bg-white border border-stone-300 rounded-full text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-shadow" %>
-      <div class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">
+        class: "w-full pl-12 pr-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-full text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-shadow" %>
+      <div class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 dark:text-stone-500">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
@@ -24,20 +24,20 @@
       <% @taxa.each do |taxon| %>
         <% specimen = taxon.approved_assets.first %>
         <%= link_to taxon_path(taxon), class: "group block" do %>
-          <div class="aspect-square bg-gradient-to-br from-stone-100 to-stone-200 rounded-2xl overflow-hidden mb-3 ring-1 ring-stone-200 group-hover:ring-amber-400 group-hover:shadow-lg transition-all duration-200">
+          <div class="aspect-square bg-gradient-to-br from-stone-100 to-stone-200 dark:from-stone-800 dark:to-stone-700 rounded-2xl overflow-hidden mb-3 ring-1 ring-stone-200 dark:ring-stone-700 group-hover:ring-amber-400 group-hover:shadow-lg transition-all duration-200">
             <% if specimen&.image&.attached? %>
               <%= image_tag specimen.image,
                 alt: taxon.scientific_name,
                 class: "w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300" %>
             <% end %>
           </div>
-          <p class="text-sm font-medium text-stone-700 group-hover:text-amber-700 transition-colors truncate">
+          <p class="text-sm font-medium text-stone-700 dark:text-stone-300 group-hover:text-amber-700 dark:group-hover:text-amber-500 transition-colors truncate">
             <em><%= taxon.scientific_name %></em>
           </p>
           <% if taxon.approved_assets_count > 1 %>
-            <p class="text-xs text-stone-500"><%= taxon.approved_assets_count %> images</p>
+            <p class="text-xs text-stone-500 dark:text-stone-400"><%= taxon.approved_assets_count %> images</p>
           <% elsif specimen&.common_name.present? %>
-            <p class="text-xs text-stone-500 truncate"><%= specimen.common_name %></p>
+            <p class="text-xs text-stone-500 dark:text-stone-400 truncate"><%= specimen.common_name %></p>
           <% end %>
         <% end %>
       <% end %>
@@ -45,13 +45,12 @@
   <% else %>
     <div class="text-center py-16">
       <div class="text-6xl mb-4">🔍</div>
-      <p class="text-lg text-stone-600 mb-2">No specimens found</p>
+      <p class="text-lg text-stone-600 dark:text-stone-400 mb-2">No specimens found</p>
       <% if params[:q].present? %>
-        <p class="text-sm text-stone-500">Try a different search term or <%= link_to "view all", browse_path, class: "text-amber-600 hover:underline" %></p>
+        <p class="text-sm text-stone-500 dark:text-stone-400">Try a different search term or <%= link_to "view all", browse_path, class: "text-amber-600 dark:text-amber-500 hover:underline" %></p>
       <% else %>
-        <p class="text-sm text-stone-500">Be the first to <%= link_to "upload a specimen", new_specimen_asset_path, class: "text-amber-600 hover:underline" %>!</p>
+        <p class="text-sm text-stone-500 dark:text-stone-400">Be the first to <%= link_to "upload a specimen", new_specimen_asset_path, class: "text-amber-600 dark:text-amber-500 hover:underline" %>!</p>
       <% end %>
     </div>
   <% end %>
 </div>
-

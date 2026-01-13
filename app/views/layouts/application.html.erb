@@ -25,32 +25,72 @@
     <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
+
+    <script>
+      // Theme: default to light, respect saved preference
+      function applyTheme() {
+        var isDark = document.documentElement.classList.contains('dark');
+        var sun = document.getElementById('sun-icon');
+        var moon = document.getElementById('moon-icon');
+        if (sun) sun.style.display = isDark ? 'block' : 'none';
+        if (moon) moon.style.display = isDark ? 'none' : 'block';
+      }
+      
+      if (localStorage.getItem('theme') === 'dark') {
+        document.documentElement.classList.add('dark');
+      }
+      
+      function toggleTheme() {
+        document.documentElement.classList.toggle('dark');
+        localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+        applyTheme();
+      }
+      
+      // Apply on load
+      document.addEventListener('DOMContentLoaded', applyTheme);
+    </script>
   </head>
 
-  <body class="min-h-screen bg-stone-50 text-stone-800 font-sans antialiased flex flex-col">
-    <header class="fixed top-0 left-0 right-0 z-50 bg-stone-50/90 backdrop-blur-sm border-b border-stone-200">
+  <body class="min-h-screen bg-stone-50 dark:bg-stone-900 text-stone-800 dark:text-stone-200 font-sans antialiased flex flex-col transition-colors duration-200">
+    <header class="fixed top-0 left-0 right-0 z-50 bg-stone-50/90 dark:bg-stone-900/90 backdrop-blur-sm border-b border-stone-200 dark:border-stone-700">
       <nav class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
         <%= link_to root_path, class: "group" do %>
-          <span class="font-serif text-2xl text-stone-900 group-hover:text-amber-700 transition-colors tracking-tight">Specimen Gallery</span>
+          <span class="font-serif text-2xl text-stone-900 dark:text-stone-100 group-hover:text-amber-700 dark:group-hover:text-amber-500 transition-colors tracking-tight">Specimen Gallery</span>
         <% end %>
 
-        <div class="flex items-center gap-6">
-          <%= link_to "Browse", browse_path, class: "text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors" %>
+        <div class="flex items-center gap-4">
+          <%= link_to "Browse", browse_path, class: "text-sm font-medium text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 transition-colors" %>
           <%= link_to "Upload", new_specimen_asset_path, class: "text-sm font-medium px-4 py-2 bg-amber-600 text-white rounded-full hover:bg-amber-700 transition-colors" %>
-          <%= link_to "Admin", admin_specimen_assets_path, class: "text-xs text-stone-400 hover:text-stone-600 transition-colors" %>
+          
+          <!-- Theme Toggle -->
+          <button type="button" 
+                  onclick="toggleTheme()"
+                  class="p-2 text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-full transition-colors"
+                  title="Toggle dark mode">
+            <!-- Sun icon (shown in dark mode, click to go light) -->
+            <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" style="display:none;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <!-- Moon icon (shown in light mode, click to go dark) -->
+            <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          </button>
+          
+          <%= link_to "Admin", admin_specimen_assets_path, class: "text-xs text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition-colors" %>
         </div>
       </nav>
     </header>
 
     <main class="flex-grow max-w-6xl mx-auto pt-24 pb-12 px-6 w-full">
       <% if notice.present? %>
-        <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg">
+        <div class="mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 rounded-lg">
           <%= notice %>
         </div>
       <% end %>
 
       <% if alert.present? %>
-        <div class="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg">
+        <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 rounded-lg">
           <%= alert %>
         </div>
       <% end %>
@@ -58,13 +98,13 @@
       <%= yield %>
     </main>
 
-    <footer class="border-t border-stone-200 bg-stone-100">
-      <div class="max-w-6xl mx-auto px-6 py-8 text-center text-sm text-stone-500">
+    <footer class="border-t border-stone-200 dark:border-stone-700 bg-stone-100 dark:bg-stone-800">
+      <div class="max-w-6xl mx-auto px-6 py-8 text-center text-sm text-stone-500 dark:text-stone-400">
         <p class="mb-3">Specimen Gallery — Open-source natural history specimens</p>
         <div class="flex items-center justify-center gap-4">
-          <%= link_to "About", about_path, class: "hover:text-stone-700 transition-colors" %>
-          <span class="text-stone-300">·</span>
-          <%= link_to "Terms", terms_path, class: "hover:text-stone-700 transition-colors" %>
+          <%= link_to "About", about_path, class: "hover:text-stone-700 dark:hover:text-stone-200 transition-colors" %>
+          <span class="text-stone-300 dark:text-stone-600">·</span>
+          <%= link_to "Terms", terms_path, class: "hover:text-stone-700 dark:hover:text-stone-200 transition-colors" %>
         </div>
       </div>
     </footer>

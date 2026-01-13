@@ -1,18 +1,18 @@
 <div class="w-full">
   <!-- Hero Section -->
   <div class="text-center mb-12">
-    <h1 class="font-serif text-5xl md:text-6xl text-stone-900 mb-4">Specimen Gallery</h1>
-    <p class="text-lg text-stone-600 max-w-xl mx-auto mb-8">
+    <h1 class="font-serif text-5xl md:text-6xl text-stone-900 dark:text-stone-100 mb-4">Specimen Gallery</h1>
+    <p class="text-lg text-stone-600 dark:text-stone-400 max-w-xl mx-auto mb-8">
       A collection of high-quality, transparent-background specimens for scientific illustration and education.
     </p>
     <div class="flex items-center justify-center gap-4">
-      <%= link_to browse_path, class: "inline-flex items-center gap-2 px-6 py-3 bg-stone-900 text-white rounded-full hover:bg-stone-800 transition-colors font-medium" do %>
+      <%= link_to browse_path, class: "inline-flex items-center gap-2 px-6 py-3 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 rounded-full hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors font-medium" do %>
         Browse Collection
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
       <% end %>
-      <%= link_to "Upload", new_specimen_asset_path, class: "inline-flex items-center gap-2 px-6 py-3 border border-stone-300 text-stone-700 rounded-full hover:bg-stone-100 transition-colors font-medium" %>
+      <%= link_to "Upload", new_specimen_asset_path, class: "inline-flex items-center gap-2 px-6 py-3 border border-stone-300 dark:border-stone-600 text-stone-700 dark:text-stone-300 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors font-medium" %>
     </div>
   </div>
 
@@ -23,36 +23,36 @@
         <% @featured_taxa.each do |taxon| %>
           <% specimen = taxon.approved_assets.first %>
           <%= link_to taxon_path(taxon), class: "group block" do %>
-            <div class="aspect-square bg-gradient-to-br from-stone-100 to-stone-200 rounded-2xl overflow-hidden mb-3 ring-1 ring-stone-200 group-hover:ring-amber-400 group-hover:shadow-lg transition-all duration-200">
+            <div class="aspect-square bg-gradient-to-br from-stone-100 to-stone-200 dark:from-stone-800 dark:to-stone-700 rounded-2xl overflow-hidden mb-3 ring-1 ring-stone-200 dark:ring-stone-700 group-hover:ring-amber-400 group-hover:shadow-lg transition-all duration-200">
               <% if specimen&.image&.attached? %>
                 <%= image_tag specimen.image,
                   alt: taxon.scientific_name,
                   class: "w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300" %>
               <% end %>
             </div>
-            <p class="text-sm font-medium text-stone-700 group-hover:text-amber-700 transition-colors truncate">
+            <p class="text-sm font-medium text-stone-700 dark:text-stone-300 group-hover:text-amber-700 dark:group-hover:text-amber-500 transition-colors truncate">
               <em><%= taxon.scientific_name %></em>
             </p>
             <% if specimen&.common_name.present? %>
-              <p class="text-xs text-stone-500 truncate"><%= specimen.common_name %></p>
+              <p class="text-xs text-stone-500 dark:text-stone-400 truncate"><%= specimen.common_name %></p>
             <% end %>
           <% end %>
         <% end %>
       </div>
 
       <!-- Fade overlay -->
-      <div class="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-stone-50 via-stone-50/90 to-transparent pointer-events-none"></div>
+      <div class="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-stone-50 dark:from-stone-900 via-stone-50/90 dark:via-stone-900/90 to-transparent pointer-events-none"></div>
     <% else %>
       <div class="text-center py-16">
-        <p class="text-lg text-stone-600 mb-4">No specimens yet</p>
-        <p class="text-sm text-stone-500">Be the first to <%= link_to "upload a specimen", new_specimen_asset_path, class: "text-amber-600 hover:underline" %>!</p>
+        <p class="text-lg text-stone-600 dark:text-stone-400 mb-4">No specimens yet</p>
+        <p class="text-sm text-stone-500 dark:text-stone-400">Be the first to <%= link_to "upload a specimen", new_specimen_asset_path, class: "text-amber-600 dark:text-amber-500 hover:underline" %>!</p>
       </div>
     <% end %>
 
     <!-- Browse CTA at bottom -->
     <% if @featured_taxa.any? %>
       <div class="absolute bottom-4 left-0 right-0 text-center z-10">
-        <%= link_to browse_path, class: "inline-flex items-center gap-2 px-5 py-2.5 bg-white/90 backdrop-blur-sm text-stone-700 rounded-full hover:bg-white transition-colors text-sm font-medium shadow-lg ring-1 ring-stone-200" do %>
+        <%= link_to browse_path, class: "inline-flex items-center gap-2 px-5 py-2.5 bg-white/90 dark:bg-stone-800/90 backdrop-blur-sm text-stone-700 dark:text-stone-200 rounded-full hover:bg-white dark:hover:bg-stone-800 transition-colors text-sm font-medium shadow-lg ring-1 ring-stone-200 dark:ring-stone-700" do %>
           View all specimens
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
