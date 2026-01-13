@@ -1,27 +1,27 @@
 <div class="w-full">
-  <%= link_to "← Back to Gallery", taxa_path, class: "inline-block text-sm text-stone-600 hover:text-amber-700 mb-8 transition-colors" %>
+  <%= link_to "← Back to Gallery", browse_path, class: "inline-block text-sm text-stone-600 dark:text-stone-400 hover:text-amber-700 dark:hover:text-amber-500 mb-8 transition-colors" %>
 
   <div class="mb-8">
-    <h1 class="font-serif text-4xl text-stone-900 mb-2">
+    <h1 class="font-serif text-4xl text-stone-900 dark:text-stone-100 mb-2">
       <em><%= @taxon.scientific_name %></em>
     </h1>
     <% if @taxon.rank.present? %>
-      <p class="text-stone-500 text-sm mb-1">Rank: <%= @taxon.rank %></p>
+      <p class="text-stone-500 dark:text-stone-400 text-sm mb-1">Rank: <%= @taxon.rank %></p>
     <% end %>
     <% if @taxon.taxon_source.present? && @taxon.taxon_id.present? %>
-      <p class="text-stone-500 text-sm">
+      <p class="text-stone-500 dark:text-stone-400 text-sm">
         <%= @taxon.taxon_source %> #<%= @taxon.taxon_id %>
       </p>
     <% end %>
-    <p class="text-stone-600 mt-2">
+    <p class="text-stone-600 dark:text-stone-400 mt-2">
       <%= pluralize(@specimen_assets.count, "approved image") %>
     </p>
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
     <% @specimen_assets.each do |specimen| %>
-      <div class="bg-white border border-stone-200 rounded-2xl overflow-hidden">
-        <div class="aspect-square bg-gradient-to-br from-stone-100 to-stone-200 p-6">
+      <div class="bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-2xl overflow-hidden">
+        <div class="aspect-square bg-gradient-to-br from-stone-100 to-stone-200 dark:from-stone-700 dark:to-stone-600 p-6">
           <% if specimen.image.attached? %>
             <%= image_tag specimen.image,
               alt: @taxon.scientific_name,
@@ -31,31 +31,31 @@
 
         <div class="p-4 space-y-2">
           <% if specimen.common_name.present? %>
-            <p class="font-medium text-stone-800"><%= specimen.common_name %></p>
+            <p class="font-medium text-stone-800 dark:text-stone-200"><%= specimen.common_name %></p>
           <% end %>
 
           <div class="flex items-center justify-between">
             <% if specimen.license == "CC0" %>
-              <span class="inline-block px-2 py-1 bg-emerald-100 text-emerald-800 rounded text-xs font-medium">CC0</span>
+              <span class="inline-block px-2 py-1 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 rounded text-xs font-medium">CC0</span>
             <% else %>
-              <span class="inline-block px-2 py-1 bg-amber-100 text-amber-800 rounded text-xs font-medium">CC-BY</span>
+              <span class="inline-block px-2 py-1 bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 rounded text-xs font-medium">CC-BY</span>
             <% end %>
 
             <% if specimen.image.attached? %>
               <%= link_to rails_blob_path(specimen.image, disposition: "attachment"),
-                class: "text-xs text-stone-500 hover:text-amber-700 transition-colors" do %>
+                class: "text-xs text-stone-500 dark:text-stone-400 hover:text-amber-700 dark:hover:text-amber-500 transition-colors" do %>
                 Download ↓
               <% end %>
             <% end %>
           </div>
 
           <% if specimen.license == "CC_BY" && specimen.attribution_name.present? %>
-            <p class="text-xs text-stone-500">
+            <p class="text-xs text-stone-500 dark:text-stone-400">
               Credit:
               <% if specimen.attribution_url.present? %>
                 <%= link_to specimen.attribution_name, specimen.attribution_url,
                   target: "_blank", rel: "noopener",
-                  class: "text-amber-700 hover:underline" %>
+                  class: "text-amber-700 dark:text-amber-500 hover:underline" %>
               <% else %>
                 <%= specimen.attribution_name %>
               <% end %>
@@ -66,4 +66,3 @@
     <% end %>
   </div>
 </div>
-
