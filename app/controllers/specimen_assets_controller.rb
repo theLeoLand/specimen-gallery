@@ -8,17 +8,25 @@ class SpecimenAssetsController < ApplicationController
     scientific_name = params[:specimen_asset][:scientific_name].to_s.strip
     uploaded_file = params[:specimen_asset][:image]
     remove_background = params[:specimen_asset][:remove_background] == "1"
+    unknown_species = params[:specimen_asset][:unknown_species] == "1"
 
-    # Match against GBIF
-    gbif_match = GbifClient.match(scientific_name)
-    is_good_match = GbifClient.good_match?(gbif_match)
+    # Handle unknown species submissions
+    if unknown_species || scientific_name.blank? || scientific_name.downcase == "unknown"
+      scientific_name = "Unknown"
+      is_good_match = false
+      gbif_match = nil
+    else
+      # Match against GBIF
+      gbif_match = GbifClient.match(scientific_name)
+      is_good_match = GbifClient.good_match?(gbif_match)
+    end
 
     # Find or create taxon, enriching with GBIF data if available
     taxon = find_or_create_taxon_with_gbif(scientific_name, gbif_match, is_good_match)
 
     @specimen_asset = taxon.specimen_assets.build(specimen_asset_params_without_image)
     @specimen_asset.status = "pending"
-    @specimen_asset.needs_review = !is_good_match
+    @specimen_asset.needs_review = !is_good_match || unknown_species
 
     # Check file size before attempting Cloudinary (10MB limit on free tier)
     if uploaded_file.present? && uploaded_file.size > 10.megabytes

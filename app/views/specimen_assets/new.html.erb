@@ -1,11 +1,11 @@
 <div class="w-full max-w-xl mx-auto">
-  <h1 class="font-serif text-4xl text-stone-900 mb-2 text-center">Upload Specimen</h1>
-  <p class="text-stone-600 text-center mb-8">Contribute to our open-source specimen collection.</p>
+  <h1 class="font-serif text-4xl text-stone-900 dark:text-stone-100 mb-2 text-center">Upload Specimen</h1>
+  <p class="text-stone-600 dark:text-stone-400 text-center mb-8">Contribute to our open-source specimen collection.</p>
 
   <% if @specimen_asset.errors.any? %>
-    <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
-      <h3 class="text-red-800 font-semibold mb-2">Please fix the following errors:</h3>
-      <ul class="list-disc list-inside text-sm text-red-700 space-y-1">
+    <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+      <h3 class="text-red-800 dark:text-red-300 font-semibold mb-2">Please fix the following errors:</h3>
+      <ul class="list-disc list-inside text-sm text-red-700 dark:text-red-400 space-y-1">
         <% @specimen_asset.errors.full_messages.each do |message| %>
           <li><%= message %></li>
         <% end %>
@@ -14,90 +14,102 @@
   <% end %>
 
   <%= form_with model: @specimen_asset, class: "space-y-6", data: { controller: "license" } do |f| %>
-    <div data-controller="taxon-autocomplete" data-taxon-autocomplete-url-value="<%= suggest_taxa_path %>">
-      <%= f.label :scientific_name, class: "block text-sm font-medium text-stone-700 mb-2" %>
+    <div data-controller="taxon-autocomplete unknown-species" data-taxon-autocomplete-url-value="<%= suggest_taxa_path %>">
+      <%= f.label :scientific_name, class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
       <div class="relative">
         <%= text_field_tag "specimen_asset[scientific_name]",
           params.dig(:specimen_asset, :scientific_name),
-          required: true,
+          id: "scientific_name_field",
           placeholder: "e.g., Papilio machaon",
           autocomplete: "off",
           data: {
             taxon_autocomplete_target: "input",
+            unknown_species_target: "nameField",
             action: "input->taxon-autocomplete#onInput keydown->taxon-autocomplete#onKeydown blur->taxon-autocomplete#onBlur"
           },
-          class: "w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
+          class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:bg-stone-100 dark:disabled:bg-stone-700 disabled:text-stone-400" %>
 
         <div data-taxon-autocomplete-target="results"
-             class="hidden absolute z-50 left-0 right-0 mt-1 bg-white border border-stone-300 rounded-xl shadow-lg max-h-64 overflow-y-auto">
+             class="hidden absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl shadow-lg max-h-64 overflow-y-auto">
         </div>
       </div>
-      <p class="mt-1 text-xs text-stone-500">Start typing to see suggestions from GBIF taxonomy.</p>
+      <p class="mt-1 text-xs text-stone-500 dark:text-stone-400">Start typing to see suggestions from GBIF taxonomy.</p>
+      
+      <label class="flex items-center gap-2 mt-3 cursor-pointer">
+        <%= check_box_tag "specimen_asset[unknown_species]", "1", false,
+          id: "unknown_species_checkbox",
+          data: { 
+            unknown_species_target: "checkbox",
+            action: "change->unknown-species#toggle" 
+          },
+          class: "w-4 h-4 text-amber-600 border-stone-300 dark:border-stone-600 rounded focus:ring-amber-500" %>
+        <span class="text-sm text-stone-600 dark:text-stone-400">I don't know the species (submit for identification)</span>
+      </label>
     </div>
 
     <div>
-      <%= f.label :common_name, class: "block text-sm font-medium text-stone-700 mb-2" %>
+      <%= f.label :common_name, class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
       <%= f.text_field :common_name,
         placeholder: "e.g., Old World Swallowtail (optional)",
-        class: "w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
+        class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
     </div>
 
     <div>
-      <%= f.label :license, class: "block text-sm font-medium text-stone-700 mb-2" %>
+      <%= f.label :license, class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
       <%= f.select :license,
         [["CC0 (Public Domain)", "CC0"], ["CC-BY (Attribution Required)", "CC_BY"]],
         {},
-        class: "w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent",
+        class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent",
         data: { action: "change->license#toggle", license_target: "select" } %>
     </div>
 
-    <div data-license-target="attribution" class="hidden space-y-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-      <p class="text-sm text-amber-800 mb-4">CC-BY requires attribution information:</p>
+    <div data-license-target="attribution" class="hidden space-y-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
+      <p class="text-sm text-amber-800 dark:text-amber-300 mb-4">CC-BY requires attribution information:</p>
 
       <div>
-        <%= f.label :attribution_name, "Your Name / Organization", class: "block text-sm font-medium text-stone-700 mb-2" %>
+        <%= f.label :attribution_name, "Your Name / Organization", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
         <%= f.text_field :attribution_name,
           placeholder: "e.g., Jane Doe",
-          class: "w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
+          class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
       </div>
 
       <div>
-        <%= f.label :attribution_url, "Attribution URL", class: "block text-sm font-medium text-stone-700 mb-2" %>
+        <%= f.label :attribution_url, "Attribution URL", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
         <%= f.url_field :attribution_url,
           placeholder: "https://...",
-          class: "w-full px-4 py-3 bg-white border border-stone-300 rounded-xl text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
+          class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
       </div>
     </div>
 
     <div>
-      <%= f.label :image, class: "block text-sm font-medium text-stone-700 mb-2" %>
+      <%= f.label :image, class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
       <div class="relative">
         <%= f.file_field :image,
           accept: "image/png,image/webp,image/jpeg,image/heic",
           required: true,
-          class: "block w-full text-sm text-stone-600 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-amber-100 file:text-amber-800 hover:file:bg-amber-200 file:cursor-pointer cursor-pointer" %>
+          class: "block w-full text-sm text-stone-600 dark:text-stone-400 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-amber-100 file:text-amber-800 dark:file:bg-amber-800 dark:file:text-amber-100 hover:file:bg-amber-200 dark:hover:file:bg-amber-700 file:cursor-pointer cursor-pointer" %>
       </div>
-      <p class="mt-2 text-xs text-stone-500">PNG or WebP with transparent background, or use background removal below.</p>
+      <p class="mt-2 text-xs text-stone-500 dark:text-stone-400">PNG or WebP with transparent background, or use background removal below.</p>
     </div>
 
-    <div class="p-4 bg-stone-100 border border-stone-200 rounded-xl">
+    <div class="p-4 bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl">
       <label class="flex items-start gap-3 cursor-pointer">
         <%= check_box_tag "specimen_asset[remove_background]", "1", false,
-          class: "mt-1 w-4 h-4 text-amber-600 border-stone-300 rounded focus:ring-amber-500" %>
+          class: "mt-1 w-4 h-4 text-amber-600 border-stone-300 dark:border-stone-600 rounded focus:ring-amber-500" %>
         <div>
-          <span class="text-sm font-medium text-stone-700">Remove background automatically</span>
-          <span class="ml-1 text-xs px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded">beta</span>
-          <p class="text-xs text-stone-500 mt-1">Upload any photo (JPG, PNG, HEIC, WebP) — we'll cut it out into a transparent PNG.</p>
+          <span class="text-sm font-medium text-stone-700 dark:text-stone-300">Remove background automatically</span>
+          <span class="ml-1 text-xs px-1.5 py-0.5 bg-amber-100 dark:bg-amber-800 text-amber-700 dark:text-amber-200 rounded">beta</span>
+          <p class="text-xs text-stone-500 dark:text-stone-400 mt-1">Upload any photo (JPG, PNG, HEIC, WebP) — we'll cut it out into a transparent PNG.</p>
         </div>
       </label>
     </div>
 
     <div class="pt-4">
       <%= f.submit "Submit Specimen",
-        class: "w-full px-6 py-4 bg-amber-600 text-white font-medium rounded-full hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-colors cursor-pointer" %>
+        class: "w-full px-6 py-4 bg-amber-600 text-white font-medium rounded-full hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 dark:focus:ring-offset-stone-900 transition-colors cursor-pointer" %>
     </div>
 
-    <p class="text-xs text-stone-500 text-center">
+    <p class="text-xs text-stone-500 dark:text-stone-400 text-center">
       Submissions are reviewed before appearing in the gallery.
     </p>
   <% end %>
