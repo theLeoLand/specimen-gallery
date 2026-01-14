@@ -6,7 +6,19 @@ module Admin
     ALLOWED_STATUSES = %w[approved rejected pending].freeze
 
     def index
-      @specimen_assets = SpecimenAsset.where(status: "pending").order(created_at: :desc)
+      @filter = params[:filter] || "pending"
+      
+      @specimen_assets = case @filter
+      when "approved"
+        SpecimenAsset.where(status: "approved").order(created_at: :desc)
+      when "all"
+        SpecimenAsset.order(created_at: :desc)
+      else
+        SpecimenAsset.where(status: "pending").order(created_at: :desc)
+      end
+      
+      @pending_count = SpecimenAsset.where(status: "pending").count
+      @approved_count = SpecimenAsset.where(status: "approved").count
     end
 
     def edit
