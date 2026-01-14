@@ -82,6 +82,24 @@
           <% end %>
         </div>
 
+        <!-- Specimen Type (Group) -->
+        <div>
+          <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">Specimen Type</label>
+          <%= select_tag "specimen_asset[taxon_group]",
+            options_for_select(
+              TaxonGroupResolver.all_with_metadata.map { |g| ["#{g[:icon]} #{g[:name]}", g[:value]] },
+              @specimen_asset.taxon&.group
+            ),
+            class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
+          <p class="mt-1 text-xs text-stone-500 dark:text-stone-400">
+            <% if @specimen_asset.taxon&.gbif_key.present? %>
+              Auto-detected from GBIF. Override if incorrect.
+            <% else %>
+              Manually assign a specimen type.
+            <% end %>
+          </p>
+        </div>
+
         <!-- Common name -->
         <div>
           <%= f.label :common_name, class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>

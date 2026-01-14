@@ -6,9 +6,14 @@ class Taxon < ApplicationRecord
 
   validates :scientific_name, presence: true,
     uniqueness: { case_sensitive: false, message: "already exists" }
+  validates :group, inclusion: { in: TaxonGroupResolver::GROUPS, allow_blank: true }
 
   scope :with_approved_assets, -> {
     joins(:specimen_assets).where(specimen_assets: { status: "approved" }).distinct
+  }
+
+  scope :by_group, ->(group) {
+    where(group: group) if group.present? && group != "all"
   }
 
   # Find or create taxon by scientific name (case-insensitive)
@@ -28,6 +33,21 @@ class Taxon < ApplicationRecord
 
   def approved_assets_count
     specimen_assets.where(status: "approved").count
+  end
+
+  # Display name for the group
+  def group_display_name
+    TaxonGroupResolver.display_name(group)
+  end
+
+  # Icon for the group
+  def group_icon
+    TaxonGroupResolver.icon(group)
+  end
+
+  # Assign group from GBIF match data
+  def assign_group_from_gbif(gbif_match)
+    self.group = TaxonGroupResolver.resolve(gbif_match)
   end
 end
 

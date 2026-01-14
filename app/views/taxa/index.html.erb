@@ -1,21 +1,65 @@
 <div class="w-full">
-  <div class="text-center mb-12">
+  <div class="text-center mb-8">
     <h1 class="font-serif text-5xl text-stone-900 dark:text-stone-100 mb-4">Browse Collection</h1>
     <p class="text-lg text-stone-600 dark:text-stone-400 max-w-xl mx-auto">
       Search and explore all specimens in the gallery.
     </p>
   </div>
 
-  <%= form_with url: browse_path, method: :get, class: "max-w-md mx-auto mb-12" do |f| %>
-    <div class="relative">
-      <%= text_field_tag :q, params[:q],
-        placeholder: "Search by name...",
-        class: "w-full pl-12 pr-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-full text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-shadow" %>
-      <div class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 dark:text-stone-500">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
+  <!-- Search and Filter -->
+  <div class="max-w-2xl mx-auto mb-8">
+    <%= form_with url: browse_path, method: :get, class: "mb-4" do |f| %>
+      <div class="relative">
+        <%= text_field_tag :q, params[:q],
+          placeholder: "Search by name...",
+          class: "w-full pl-12 pr-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-full text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-shadow" %>
+        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 dark:text-stone-500">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        <!-- Preserve group filter when searching -->
+        <% if @current_group.present? %>
+          <%= hidden_field_tag :group, @current_group %>
+        <% end %>
       </div>
+    <% end %>
+
+    <!-- Group filter chips -->
+    <div class="flex flex-wrap justify-center gap-2">
+      <%= link_to browse_path(q: params[:q]),
+        class: "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors #{@current_group.blank? ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200' : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'}" do %>
+        <span>All</span>
+      <% end %>
+      
+      <% @groups.each do |group| %>
+        <%= link_to browse_path(group: group[:value], q: params[:q]),
+          class: "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors #{@current_group == group[:value] ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200' : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'}",
+          title: group[:name] do %>
+          <span><%= group[:icon] %></span>
+          <span class="hidden sm:inline"><%= group[:name] %></span>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Results info -->
+  <% if @current_group.present? || params[:q].present? %>
+    <div class="text-center mb-6">
+      <p class="text-sm text-stone-500 dark:text-stone-400">
+        <% group_name = @current_group.present? ? TaxonGroupResolver.display_name(@current_group) : nil %>
+        <% if params[:q].present? && group_name %>
+          Showing "<%= params[:q] %>" in <%= group_name %>
+        <% elsif params[:q].present? %>
+          Results for "<%= params[:q] %>"
+        <% elsif group_name %>
+          Showing <%= group_name %>
+        <% end %>
+        (<%= @taxa.count %> <%= "specimen".pluralize(@taxa.count) %>)
+        <% if @current_group.present? || params[:q].present? %>
+          · <%= link_to "Clear filters", browse_path, class: "text-amber-600 dark:text-amber-500 hover:underline" %>
+        <% end %>
+      </p>
     </div>
   <% end %>
 
@@ -50,10 +94,15 @@
         </svg>
       </div>
       <p class="text-lg text-stone-600 dark:text-stone-400 mb-2">No specimens found</p>
-      <% if params[:q].present? %>
-        <p class="text-sm text-stone-500 dark:text-stone-400">Try a different search term or <%= link_to "view all", browse_path, class: "text-amber-600 dark:text-amber-500 hover:underline" %></p>
+      <% if params[:q].present? || @current_group.present? %>
+        <p class="text-sm text-stone-500 dark:text-stone-400">
+          Try a different search term or 
+          <%= link_to "view all", browse_path, class: "text-amber-600 dark:text-amber-500 hover:underline" %>
+        </p>
       <% else %>
-        <p class="text-sm text-stone-500 dark:text-stone-400">Be the first to <%= link_to "upload a specimen", new_specimen_asset_path, class: "text-amber-600 dark:text-amber-500 hover:underline" %>!</p>
+        <p class="text-sm text-stone-500 dark:text-stone-400">
+          Be the first to <%= link_to "upload a specimen", new_specimen_asset_path, class: "text-amber-600 dark:text-amber-500 hover:underline" %>!
+        </p>
       <% end %>
     </div>
   <% end %>

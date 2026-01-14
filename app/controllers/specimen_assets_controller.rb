@@ -9,6 +9,7 @@ class SpecimenAssetsController < ApplicationController
     uploaded_file = params[:specimen_asset][:image]
     remove_background = params[:specimen_asset][:remove_background] == "1"
     unknown_species = params[:specimen_asset][:unknown_species] == "1"
+    user_group = params[:specimen_asset][:group].presence
 
     # Handle unknown species submissions
     if unknown_species || scientific_name.blank? || scientific_name.downcase == "unknown"
@@ -22,7 +23,7 @@ class SpecimenAssetsController < ApplicationController
     end
 
     # Find or create taxon, enriching with GBIF data if available
-    taxon = find_or_create_taxon_with_gbif(scientific_name, gbif_match, is_good_match)
+    taxon = find_or_create_taxon_with_gbif(scientific_name, gbif_match, is_good_match, user_group)
 
     @specimen_asset = taxon.specimen_assets.build(specimen_asset_params_without_image)
     @specimen_asset.status = "pending"
@@ -211,21 +212,32 @@ class SpecimenAssetsController < ApplicationController
     "#{base_name}_cutout.png"
   end
 
-  def find_or_create_taxon_with_gbif(scientific_name, gbif_match, is_good_match)
+  def find_or_create_taxon_with_gbif(scientific_name, gbif_match, is_good_match, user_group = nil)
     canonical = is_good_match && gbif_match ? gbif_match[:canonical_name] : nil
     lookup_name = canonical.presence || scientific_name
 
     taxon = Taxon.where("LOWER(scientific_name) = LOWER(?)", lookup_name).first
 
     if taxon
+      # Update existing taxon with GBIF data if we have a good match
       if is_good_match && gbif_match && taxon.gbif_key.nil?
-        taxon.update(gbif_attributes(gbif_match))
+        attrs = gbif_attributes(gbif_match)
+        attrs[:group] = TaxonGroupResolver.resolve(gbif_match) if taxon.group.blank?
+        taxon.update(attrs)
+      # If no GBIF match but user provided a group, update it
+      elsif taxon.group.blank? && user_group.present?
+        taxon.update(group: user_group)
       end
       taxon
     else
       attrs = { scientific_name: lookup_name }
       if is_good_match && gbif_match
         attrs.merge!(gbif_attributes(gbif_match))
+        attrs[:group] = TaxonGroupResolver.resolve(gbif_match)
+      elsif user_group.present?
+        attrs[:group] = user_group
+      else
+        attrs[:group] = "other"
       end
       Taxon.create!(attrs)
     end

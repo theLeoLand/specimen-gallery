@@ -2,7 +2,15 @@
 class TaxaController < ApplicationController
   def index
     @taxa = Taxon.with_approved_assets
+    @current_group = params[:group].presence
+    @groups = TaxonGroupResolver.all_with_metadata
 
+    # Filter by group
+    if @current_group.present? && @current_group != "all"
+      @taxa = @taxa.where(group: @current_group)
+    end
+
+    # Search by name
     if params[:q].present?
       search_term = "%#{params[:q]}%"
       # Search scientific_name on taxon OR common_name on any approved specimen

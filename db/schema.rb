@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_06_020000) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_14_071735) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -70,6 +70,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_06_020000) do
     t.integer "gbif_key"
     t.string "gbif_match_type"
     t.string "gbif_rank"
+    t.string "group"
     t.string "rank"
     t.string "scientific_name", null: false
     t.string "taxon_id"
@@ -77,6 +78,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_06_020000) do
     t.datetime "updated_at", null: false
     t.index "lower((scientific_name)::text)", name: "index_taxa_on_lower_scientific_name", unique: true
     t.index ["gbif_key"], name: "index_taxa_on_gbif_key"
+    t.index ["group"], name: "index_taxa_on_group"
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"

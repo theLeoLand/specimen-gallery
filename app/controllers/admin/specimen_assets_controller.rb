@@ -66,11 +66,15 @@ module Admin
 
     def handle_form_update
       scientific_name = params[:specimen_asset][:scientific_name].to_s.strip
+      taxon_group = params[:specimen_asset][:taxon_group].presence
       
       # Update or create taxon if scientific name changed
       if scientific_name.present? && scientific_name != @specimen_asset.taxon&.scientific_name
-        taxon = find_or_create_taxon(scientific_name)
+        taxon = find_or_create_taxon(scientific_name, taxon_group)
         @specimen_asset.taxon = taxon
+      elsif taxon_group.present? && taxon_group != @specimen_asset.taxon&.group
+        # Update group on existing taxon
+        @specimen_asset.taxon&.update(group: taxon_group)
       end
 
       # Update other fields
@@ -92,7 +96,7 @@ module Admin
       end
     end
 
-    def find_or_create_taxon(scientific_name)
+    def find_or_create_taxon(scientific_name, user_group = nil)
       # Try GBIF lookup
       gbif_match = GbifClient.match(scientific_name)
       is_good_match = GbifClient.good_match?(gbif_match)
@@ -105,13 +109,22 @@ module Admin
       if taxon
         # Update with GBIF data if we have it and taxon doesn't
         if is_good_match && gbif_match && taxon.gbif_key.nil?
-          taxon.update(gbif_attributes(gbif_match))
+          attrs = gbif_attributes(gbif_match)
+          attrs[:group] = TaxonGroupResolver.resolve(gbif_match) if taxon.group.blank?
+          taxon.update(attrs)
+        elsif user_group.present?
+          taxon.update(group: user_group)
         end
         taxon
       else
         attrs = { scientific_name: lookup_name }
         if is_good_match && gbif_match
           attrs.merge!(gbif_attributes(gbif_match))
+          attrs[:group] = TaxonGroupResolver.resolve(gbif_match)
+        elsif user_group.present?
+          attrs[:group] = user_group
+        else
+          attrs[:group] = "other"
         end
         Taxon.create!(attrs)
       end
