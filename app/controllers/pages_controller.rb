@@ -10,5 +10,8 @@ class PagesController < ApplicationController
 
   def terms
   end
+
+  def upload_guide
+  end
 end
 

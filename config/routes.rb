@@ -5,6 +5,7 @@ Rails.application.routes.draw do
   # Static pages
   get "about", to: "pages#about"
   get "terms", to: "pages#terms"
+  get "upload-guide", to: "pages#upload_guide", as: :upload_guide
   get "browse", to: "taxa#index", as: :browse
   get "taxa", to: redirect("/browse")  # Redirect old URL
 

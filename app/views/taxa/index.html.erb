@@ -44,7 +44,11 @@
     </div>
   <% else %>
     <div class="text-center py-16">
-      <div class="text-6xl mb-4">🔍</div>
+      <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-stone-100 dark:bg-stone-700 flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-stone-400 dark:text-stone-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
       <p class="text-lg text-stone-600 dark:text-stone-400 mb-2">No specimens found</p>
       <% if params[:q].present? %>
         <p class="text-sm text-stone-500 dark:text-stone-400">Try a different search term or <%= link_to "view all", browse_path, class: "text-amber-600 dark:text-amber-500 hover:underline" %></p>
