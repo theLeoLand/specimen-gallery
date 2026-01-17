@@ -17,6 +17,10 @@ Rails.application.routes.draw do
   resources :specimen_assets, only: %i[new create]
 
   namespace :admin do
-    resources :specimen_assets, only: %i[index edit update destroy]
+    resources :specimen_assets, only: %i[index edit update destroy] do
+      member do
+        patch :unpublish
+      end
+    end
   end
 end

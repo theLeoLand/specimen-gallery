@@ -45,6 +45,20 @@ module Admin
                     notice: "Specimen deleted."
     end
 
+    def unpublish
+      @specimen_asset = SpecimenAsset.find(params[:id])
+
+      unless @specimen_asset.status == "approved"
+        redirect_back fallback_location: admin_specimen_assets_path,
+                      alert: "Only approved specimens can be unpublished."
+        return
+      end
+
+      @specimen_asset.update!(status: "pending", needs_review: true)
+      redirect_to admin_specimen_assets_path(filter: "pending"),
+                  notice: "Specimen moved back to pending queue for review."
+    end
+
     private
 
     def handle_status_update
