@@ -63,9 +63,9 @@ export default class extends Controller {
   highlightItem(items) {
     items.forEach((item, index) => {
       if (index === this.selectedIndex) {
-        item.classList.add("bg-amber-100")
+        item.classList.add("bg-amber-100", "dark:bg-amber-900/50")
       } else {
-        item.classList.remove("bg-amber-100")
+        item.classList.remove("bg-amber-100", "dark:bg-amber-900/50")
       }
     })
   }
@@ -98,9 +98,9 @@ export default class extends Controller {
     this.resultsTarget.innerHTML = suggestions.map(s => `
       <div data-suggestion data-name="${this.escapeHtml(s.name)}"
            data-action="click->taxon-autocomplete#selectSuggestion"
-           class="px-4 py-2 cursor-pointer hover:bg-amber-100 transition-colors">
-        <span class="font-medium text-stone-800">${this.escapeHtml(s.name)}</span>
-        <span class="text-xs text-stone-500 ml-2">${this.escapeHtml(s.rank || '')}</span>
+           class="px-4 py-2 cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors">
+        <span class="font-medium text-stone-800 dark:text-stone-100">${this.escapeHtml(s.name)}</span>
+        <span class="text-xs text-stone-500 dark:text-stone-400 ml-2">${this.escapeHtml(s.rank || '')}</span>
       </div>
     `).join("")
 
