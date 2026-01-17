@@ -12,6 +12,14 @@ class Taxon < ApplicationRecord
     joins(:specimen_assets).where(specimen_assets: { status: "approved" }).distinct
   }
 
+  # Order taxa by their most recently approved asset (newest first)
+  scope :ordered_by_latest_approved, -> {
+    joins(:specimen_assets)
+      .where(specimen_assets: { status: "approved" })
+      .group("taxa.id")
+      .order(Arel.sql("MAX(specimen_assets.created_at) DESC"))
+  }
+
   scope :by_group, ->(group) {
     where(group: group) if group.present? && group != "all"
   }

@@ -1,8 +1,8 @@
 # app/controllers/pages_controller.rb
 class PagesController < ApplicationController
   def home
-    # Get a sampling of taxa with approved assets for the homepage preview
-    @featured_taxa = Taxon.with_approved_assets.order(:scientific_name).limit(10)
+    # Get taxa with approved assets, ordered by most recent upload (newest first)
+    @featured_taxa = Taxon.ordered_by_latest_approved.limit(10)
   end
 
   def about
