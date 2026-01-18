@@ -5,29 +5,49 @@ class SpecimenAssetsController < ApplicationController
   end
 
   def create
+    # New universal flow: specimen_name is required, scientific_name is optional
+    specimen_name = params[:specimen_asset][:specimen_name].to_s.strip
     scientific_name = params[:specimen_asset][:scientific_name].to_s.strip
     uploaded_file = params[:specimen_asset][:image]
     remove_background = params[:specimen_asset][:remove_background] == "1"
-    unknown_species = params[:specimen_asset][:unknown_species] == "1"
+    unsure_id = params[:specimen_asset][:unsure_id] == "1"
     user_group = params[:specimen_asset][:group].presence
 
-    # Handle unknown species submissions
-    if unknown_species || scientific_name.blank? || scientific_name.downcase == "unknown"
-      scientific_name = "Unknown"
-      is_good_match = false
-      gbif_match = nil
-    else
-      # Match against GBIF
+    # Determine GBIF match (only if scientific name provided)
+    gbif_match = nil
+    is_good_match = false
+    
+    if scientific_name.present? && !unsure_id
       gbif_match = GbifClient.match(scientific_name)
       is_good_match = GbifClient.good_match?(gbif_match)
     end
 
-    # Find or create taxon, enriching with GBIF data if available
-    taxon = find_or_create_taxon_with_gbif(scientific_name, gbif_match, is_good_match, user_group)
+    # Determine taxon name: use scientific name if provided and matched, otherwise use specimen_name
+    taxon_name = if is_good_match && gbif_match
+      gbif_match[:canonical_name].presence || scientific_name
+    elsif scientific_name.present?
+      scientific_name
+    else
+      specimen_name  # Use specimen_name as fallback for taxon grouping
+    end
+
+    # Find or create taxon
+    taxon = find_or_create_taxon_with_gbif(taxon_name, gbif_match, is_good_match, user_group)
 
     @specimen_asset = taxon.specimen_assets.build(specimen_asset_params_without_image)
+    @specimen_asset.specimen_name = specimen_name
     @specimen_asset.status = "pending"
-    @specimen_asset.needs_review = !is_good_match || unknown_species
+    
+    # Determine needs_review based on hybrid verification policy:
+    # 1) User explicitly unsure => needs_review = true
+    # 2) Non-living category (minerals/rocks) => needs_review = false (GBIF not applicable)
+    # 3) Living category => needs_review = true unless GBIF verified
+    @specimen_asset.needs_review = determine_needs_review(
+      unsure_id: unsure_id,
+      group: taxon.group,
+      scientific_name_provided: scientific_name.present?,
+      is_good_match: is_good_match
+    )
 
     # Check file size before attempting Cloudinary (10MB limit on free tier)
     if uploaded_file.present? && uploaded_file.size > 10.megabytes
@@ -83,6 +103,7 @@ class SpecimenAssetsController < ApplicationController
 
   def specimen_asset_params_without_image
     params.require(:specimen_asset).permit(
+      :specimen_name,
       :common_name,
       :license,
       :attribution_name,
@@ -259,7 +280,7 @@ class SpecimenAssetsController < ApplicationController
     base = if is_good_match
       "Thank you! Your specimen is pending review and will appear once approved."
     else
-      "Thank you! Your specimen is pending review. The scientific name could not be verified."
+      "Thank you! Your specimen is pending review."
     end
 
     if bg_removal_failed
@@ -267,5 +288,21 @@ class SpecimenAssetsController < ApplicationController
     else
       base
     end
+  end
+
+  # Hybrid verification policy for needs_review flag:
+  # - User explicitly unsure => true
+  # - Non-living (minerals/rocks) => false (GBIF not applicable)
+  # - Living organisms => true unless GBIF verified
+  def determine_needs_review(unsure_id:, group:, scientific_name_provided:, is_good_match:)
+    # Rule 1: User explicitly asked for ID help
+    return true if unsure_id
+
+    # Rule 2: Non-living categories don't need GBIF verification
+    return false if TaxonGroupResolver.non_living?(group)
+
+    # Rule 3: Living categories need GBIF verification
+    # Good match means scientific_name was provided AND GBIF verified it
+    !is_good_match
   end
 end

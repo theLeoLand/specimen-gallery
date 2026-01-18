@@ -14,17 +14,28 @@
   <% end %>
 
   <%= form_with model: @specimen_asset, class: "space-y-6", data: { controller: "license" } do |f| %>
+    <!-- Specimen Name (REQUIRED) -->
+    <div>
+      <%= f.label :specimen_name, "Specimen name", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+      <%= f.text_field :specimen_name,
+        placeholder: "e.g., Bismuth / Quartz / Apis mellifera",
+        required: true,
+        class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
+      <p class="mt-1 text-xs text-stone-500 dark:text-stone-400">For living organisms, you can enter a Latin name (optional).</p>
+    </div>
+
+    <!-- Scientific/Taxonomic Name (OPTIONAL) with GBIF autocomplete -->
     <div data-controller="taxon-autocomplete unknown-species" data-taxon-autocomplete-url-value="<%= suggest_taxa_path %>">
-      <%= f.label :scientific_name, class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+      <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">Scientific / taxonomic name <span class="text-stone-400 dark:text-stone-500 font-normal">(optional)</span></label>
       <div class="relative">
         <%= text_field_tag "specimen_asset[scientific_name]",
           params.dig(:specimen_asset, :scientific_name),
           id: "scientific_name_field",
-          placeholder: "e.g., Papilio machaon",
+          placeholder: "e.g., Apis mellifera",
           autocomplete: "off",
           data: {
             taxon_autocomplete_target: "input",
-            unknown_species_target: "nameField",
+            unknown_species_target: "taxonomyField",
             action: "input->taxon-autocomplete#onInput keydown->taxon-autocomplete#onKeydown blur->taxon-autocomplete#onBlur"
           },
           class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:bg-stone-100 dark:disabled:bg-stone-700 disabled:text-stone-400" %>
@@ -36,18 +47,18 @@
       <p class="mt-1 text-xs text-stone-500 dark:text-stone-400">Start typing to see suggestions from GBIF taxonomy.</p>
       
       <label class="flex items-center gap-2 mt-3 cursor-pointer">
-        <%= check_box_tag "specimen_asset[unknown_species]", "1", false,
-          id: "unknown_species_checkbox",
+        <%= check_box_tag "specimen_asset[unsure_id]", "1", false,
+          id: "unsure_id_checkbox",
           data: { 
             unknown_species_target: "checkbox",
             action: "change->unknown-species#toggle" 
           },
           class: "w-4 h-4 text-amber-600 border-stone-300 dark:border-stone-600 rounded focus:ring-amber-500" %>
-        <span class="text-sm text-stone-600 dark:text-stone-400">I don't know the species (submit for identification)</span>
+        <span class="text-sm text-stone-600 dark:text-stone-400">I'm not sure (submit for ID help)</span>
       </label>
     </div>
 
-    <!-- Category selector (always visible) -->
+    <!-- Category selector -->
     <div>
       <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">Category</label>
       <%= select_tag "specimen_asset[group]",
@@ -60,7 +71,7 @@
     <div>
       <%= f.label :common_name, class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
       <%= f.text_field :common_name,
-        placeholder: "e.g., Old World Swallowtail (optional)",
+        placeholder: "e.g., Honey Bee (optional)",
         class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
     </div>
 

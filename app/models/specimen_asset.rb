@@ -6,6 +6,7 @@ class SpecimenAsset < ApplicationRecord
   STATUSES = %w[pending approved rejected].freeze
   LICENSES = %w[CC0 CC_BY].freeze
 
+  validates :specimen_name, presence: { message: "is required" }
   validates :status, inclusion: { in: STATUSES }
   validates :license, inclusion: { in: LICENSES }
   validate :image_attached
@@ -17,8 +18,18 @@ class SpecimenAsset < ApplicationRecord
   before_validation :default_status
   before_validation :compute_sha256_hash
 
-  # Delegate scientific_name for convenience
+  # Delegate scientific_name for convenience (from taxon)
   delegate :scientific_name, to: :taxon, allow_nil: true
+
+  # Display name: specimen_name is the primary label
+  def display_name
+    specimen_name.presence || scientific_name || "Unknown"
+  end
+
+  # Whether this specimen has a verified scientific/taxonomic name
+  def has_verified_taxonomy?
+    taxon&.gbif_key.present?
+  end
 
   private
 

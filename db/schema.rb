@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_14_071735) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_17_193134) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -54,12 +54,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_14_071735) do
     t.boolean "needs_review", default: false, null: false
     t.jsonb "qc_flags"
     t.string "sha256_hash"
+    t.string "specimen_name"
     t.string "status"
     t.bigint "taxon_id"
     t.datetime "updated_at", null: false
     t.index ["bg_removed"], name: "index_specimen_assets_on_bg_removed"
     t.index ["needs_review"], name: "index_specimen_assets_on_needs_review"
     t.index ["sha256_hash"], name: "index_specimen_assets_on_sha256_hash", unique: true
+    t.index ["specimen_name"], name: "index_specimen_assets_on_specimen_name"
     t.index ["taxon_id"], name: "index_specimen_assets_on_taxon_id"
   end
 

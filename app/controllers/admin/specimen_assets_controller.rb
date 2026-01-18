@@ -41,8 +41,7 @@ module Admin
     def destroy
       @specimen_asset = SpecimenAsset.find(params[:id])
       @specimen_asset.destroy
-      redirect_back fallback_location: admin_specimen_assets_path,
-                    notice: "Specimen deleted."
+      redirect_to admin_specimen_assets_path, notice: "Specimen deleted."
     end
 
     def unpublish
@@ -79,6 +78,7 @@ module Admin
     end
 
     def handle_form_update
+      specimen_name = params[:specimen_asset][:specimen_name].to_s.strip
       scientific_name = params[:specimen_asset][:scientific_name].to_s.strip
       taxon_group = params[:specimen_asset][:taxon_group].presence
       
@@ -91,7 +91,8 @@ module Admin
         @specimen_asset.taxon&.update(group: taxon_group)
       end
 
-      # Update other fields
+      # Update specimen fields
+      @specimen_asset.specimen_name = specimen_name if specimen_name.present?
       @specimen_asset.common_name = params[:specimen_asset][:common_name]
       @specimen_asset.license = params[:specimen_asset][:license]
       @specimen_asset.attribution_name = params[:specimen_asset][:attribution_name]

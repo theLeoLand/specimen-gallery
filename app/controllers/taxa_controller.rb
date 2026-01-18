@@ -10,13 +10,12 @@ class TaxaController < ApplicationController
       @taxa = @taxa.where(group: @current_group)
     end
 
-    # Search by name
+    # Search by name (specimen_name, scientific_name, or common_name)
     if params[:q].present?
       search_term = "%#{params[:q]}%"
-      # Search scientific_name on taxon OR common_name on any approved specimen
       @taxa = @taxa
         .left_joins(:specimen_assets)
-        .where("taxa.scientific_name ILIKE :q OR specimen_assets.common_name ILIKE :q", q: search_term)
+        .where("taxa.scientific_name ILIKE :q OR specimen_assets.specimen_name ILIKE :q OR specimen_assets.common_name ILIKE :q", q: search_term)
         .distinct
     end
 

@@ -1,18 +1,19 @@
 import { Controller } from "@hotwired/stimulus"
 
+// Handles "I'm not sure" checkbox behavior for taxonomy field
 export default class extends Controller {
-  static targets = ["checkbox", "nameField"]
+  static targets = ["checkbox", "taxonomyField"]
 
   toggle() {
-    const isUnknown = this.checkboxTarget.checked
+    const isUnsure = this.checkboxTarget.checked
     
-    if (isUnknown) {
-      this.nameFieldTarget.value = "Unknown"
-      this.nameFieldTarget.disabled = true
-      this.nameFieldTarget.required = false
+    if (isUnsure) {
+      // Clear and disable the optional taxonomy field
+      this.taxonomyFieldTarget.value = ""
+      this.taxonomyFieldTarget.disabled = true
     } else {
-      this.nameFieldTarget.value = ""
-      this.nameFieldTarget.disabled = false
+      // Re-enable taxonomy field
+      this.taxonomyFieldTarget.disabled = false
     }
   }
 }

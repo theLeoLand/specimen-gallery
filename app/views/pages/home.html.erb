@@ -26,14 +26,16 @@
             <div class="aspect-square bg-gradient-to-br from-stone-100 to-stone-200 dark:from-stone-800 dark:to-stone-700 rounded-2xl overflow-hidden mb-3 ring-1 ring-stone-200 dark:ring-stone-700 group-hover:ring-amber-400 group-hover:shadow-lg transition-all duration-200">
               <% if specimen&.image&.attached? %>
                 <%= image_tag specimen.image,
-                  alt: taxon.scientific_name,
+                  alt: specimen&.display_name,
                   class: "w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300" %>
               <% end %>
             </div>
             <p class="text-sm font-medium text-stone-700 dark:text-stone-300 group-hover:text-amber-700 dark:group-hover:text-amber-500 transition-colors truncate">
-              <em><%= taxon.scientific_name %></em>
+              <%= specimen&.display_name || taxon.scientific_name %>
             </p>
-            <% if specimen&.common_name.present? %>
+            <% if specimen&.has_verified_taxonomy? && specimen.specimen_name != taxon.scientific_name %>
+              <p class="text-xs text-stone-500 dark:text-stone-400 truncate italic"><%= taxon.scientific_name %></p>
+            <% elsif specimen&.common_name.present? && specimen.common_name != specimen.specimen_name %>
               <p class="text-xs text-stone-500 dark:text-stone-400 truncate"><%= specimen.common_name %></p>
             <% end %>
           <% end %>

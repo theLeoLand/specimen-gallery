@@ -13,7 +13,7 @@
         <div class="aspect-square bg-gradient-to-br from-stone-100 to-stone-200 dark:from-stone-700 dark:to-stone-800 rounded-2xl overflow-hidden mb-4">
           <% if @specimen_asset.image.attached? %>
             <%= image_tag @specimen_asset.image,
-              alt: @specimen_asset.taxon&.scientific_name || "Specimen",
+              alt: @specimen_asset.display_name,
               class: "w-full h-full object-contain p-4" %>
           <% end %>
         </div>
@@ -43,14 +43,26 @@
         </div>
       <% end %>
 
-      <%= form_with model: [:admin, @specimen_asset], class: "space-y-6", data: { controller: "taxon-autocomplete", taxon_autocomplete_url_value: suggest_taxa_path } do |f| %>
-        <!-- Scientific name with autocomplete -->
+      <%= form_with model: [:admin, @specimen_asset], class: "space-y-6", data: { controller: "taxon-autocomplete license", taxon_autocomplete_url_value: suggest_taxa_path } do |f| %>
+        <!-- Specimen name (required display name) -->
         <div>
-          <%= f.label :scientific_name, class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+          <%= f.label :specimen_name, "Specimen name", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+          <%= f.text_field :specimen_name,
+            placeholder: "e.g., Bismuth / Quartz / Apis mellifera",
+            required: true,
+            class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
+          <p class="mt-1 text-xs text-stone-500 dark:text-stone-400">
+            Primary display name for this specimen.
+          </p>
+        </div>
+
+        <!-- Scientific/taxonomic name with autocomplete (optional) -->
+        <div>
+          <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">Scientific / taxonomic name <span class="text-stone-400 dark:text-stone-500 font-normal">(optional)</span></label>
           <div class="relative">
             <%= text_field_tag "specimen_asset[scientific_name]",
               @specimen_asset.taxon&.scientific_name,
-              placeholder: "e.g., Carcharodon carcharias",
+              placeholder: "e.g., Apis mellifera",
               autocomplete: "off",
               data: {
                 taxon_autocomplete_target: "input",
@@ -71,11 +83,7 @@
               ✓ Currently matched: <%= @specimen_asset.taxon.gbif_canonical_name %> 
               (<%= @specimen_asset.taxon.gbif_rank&.downcase %>)
             </p>
-          <% elsif @specimen_asset.taxon&.scientific_name == "Unknown" %>
-            <p class="mt-2 text-xs text-blue-600 dark:text-blue-400">
-              Submitted as unknown — please identify if possible
-            </p>
-          <% else %>
+          <% elsif @specimen_asset.taxon&.scientific_name.present? && @specimen_asset.taxon.scientific_name != @specimen_asset.specimen_name %>
             <p class="mt-2 text-xs text-amber-600 dark:text-amber-400">
               ⚠ Not verified in GBIF
             </p>
@@ -114,27 +122,28 @@
           <%= f.select :license,
             [["CC0 (Public Domain)", "CC0"], ["CC-BY (Attribution Required)", "CC_BY"]],
             {},
-            class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
+            class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent",
+            data: { action: "change->license#toggle", license_target: "select" } %>
         </div>
 
-        <!-- Attribution (if CC-BY) -->
-        <% if @specimen_asset.license == "CC_BY" %>
-          <div class="space-y-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
-            <p class="text-sm text-amber-800 dark:text-amber-300">Attribution information (CC-BY):</p>
-            
-            <div>
-              <%= f.label :attribution_name, "Name / Organization", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
-              <%= f.text_field :attribution_name,
-                class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
-            </div>
-
-            <div>
-              <%= f.label :attribution_url, "URL", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
-              <%= f.url_field :attribution_url,
-                class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
-            </div>
+        <!-- Attribution (for CC-BY) -->
+        <div data-license-target="attribution" class="<%= 'hidden' unless @specimen_asset.license == 'CC_BY' %> space-y-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
+          <p class="text-sm text-amber-800 dark:text-amber-300">CC-BY requires attribution information:</p>
+          
+          <div>
+            <%= f.label :attribution_name, "Your Name / Organization", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+            <%= f.text_field :attribution_name,
+              placeholder: "e.g., Jane Doe",
+              class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
           </div>
-        <% end %>
+
+          <div>
+            <%= f.label :attribution_url, "Attribution URL", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+            <%= f.url_field :attribution_url,
+              placeholder: "https://...",
+              class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
+          </div>
+        </div>
 
         <!-- Status -->
         <div>

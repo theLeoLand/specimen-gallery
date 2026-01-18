@@ -22,6 +22,9 @@ class TaxonGroupResolver
     other
   ].freeze
 
+  # Non-living categories that don't require GBIF verification
+  NON_LIVING_GROUPS = %w[mineral].freeze
+
   # Display names and icons for each group
   GROUP_METADATA = {
     "plant" => { name: "Plants", icon: "🌿" },
@@ -104,6 +107,17 @@ class TaxonGroupResolver
           icon: icon(group)
         }
       end
+    end
+
+    # Check if a group requires GBIF verification (living organisms)
+    # Returns false for minerals/rocks/elements (non-living)
+    def requires_gbif_verification?(group)
+      !NON_LIVING_GROUPS.include?(group.to_s)
+    end
+
+    # Check if a group is non-living (minerals, rocks, elements)
+    def non_living?(group)
+      NON_LIVING_GROUPS.include?(group.to_s)
     end
 
     private

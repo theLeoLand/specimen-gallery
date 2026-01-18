@@ -2,15 +2,19 @@
   <%= link_to "← Back to Gallery", browse_path, class: "inline-block text-sm text-stone-600 dark:text-stone-400 hover:text-amber-700 dark:hover:text-amber-500 mb-8 transition-colors" %>
 
   <div class="mb-8">
+    <% primary_specimen = @specimen_assets.first %>
     <h1 class="font-serif text-4xl text-stone-900 dark:text-stone-100 mb-2">
-      <em><%= @taxon.scientific_name %></em>
+      <%= primary_specimen&.display_name || @taxon.scientific_name %>
     </h1>
-    <% if @taxon.rank.present? %>
-      <p class="text-stone-500 dark:text-stone-400 text-sm mb-1">Rank: <%= @taxon.rank %></p>
+    <% if @taxon.gbif_key.present? && primary_specimen&.specimen_name != @taxon.scientific_name %>
+      <p class="text-stone-600 dark:text-stone-400 text-lg italic mb-1"><%= @taxon.scientific_name %></p>
+    <% end %>
+    <% if @taxon.gbif_rank.present? %>
+      <p class="text-stone-500 dark:text-stone-400 text-sm mb-1">Rank: <%= @taxon.gbif_rank.downcase %></p>
     <% end %>
     <% if @taxon.taxon_source.present? && @taxon.taxon_id.present? %>
       <p class="text-stone-500 dark:text-stone-400 text-sm">
-        <%= @taxon.taxon_source %> #<%= @taxon.taxon_id %>
+        <%= @taxon.taxon_source.upcase %> #<%= @taxon.taxon_id %>
       </p>
     <% end %>
     <p class="text-stone-600 dark:text-stone-400 mt-2">
