@@ -14,4 +14,3 @@ class PagesController < ApplicationController
   def upload_guide
   end
 end
-

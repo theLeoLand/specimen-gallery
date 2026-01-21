@@ -186,4 +186,3 @@ class TaxonGroupResolver
     end
   end
 end
-

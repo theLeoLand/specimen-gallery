@@ -25,4 +25,3 @@ class TaxonGroupResolverTest < ActiveSupport::TestCase
     assert_includes TaxonGroupResolver::NON_LIVING_GROUPS, "mineral"
   end
 end
-

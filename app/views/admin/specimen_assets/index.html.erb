@@ -53,6 +53,11 @@
                   </span>
                 <% end %>
               <% end %>
+              <% if specimen.profanity_flagged? %>
+                <span class="inline-block px-2 py-0.5 bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300 rounded text-xs font-medium" title="Fields: <%= specimen.profanity_flagged_fields.join(', ') %>">
+                  ⚠ Content flagged
+                </span>
+              <% end %>
               <% if specimen.bg_removed? %>
                 <span class="inline-block px-2 py-0.5 bg-violet-100 dark:bg-violet-900/50 text-violet-800 dark:text-violet-300 rounded text-xs font-medium">
                   Cutout

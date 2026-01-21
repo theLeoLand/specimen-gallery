@@ -31,6 +31,16 @@ class SpecimenAsset < ApplicationRecord
     taxon&.gbif_key.present?
   end
 
+  # Whether this specimen was flagged for profanity
+  def profanity_flagged?
+    qc_flags&.dig("profanity_flagged") == true
+  end
+
+  # Fields that contained profanity (if any)
+  def profanity_flagged_fields
+    qc_flags&.dig("profanity_fields") || []
+  end
+
   private
 
   def default_status
@@ -58,7 +68,7 @@ class SpecimenAsset < ApplicationRecord
 
   def image_file_size
     return unless image.attached?
-    
+
     max_size = 10.megabytes
     if image.blob.byte_size > max_size
       errors.add(:image, "is too large (#{(image.blob.byte_size / 1.megabyte.to_f).round(1)}MB). Maximum is 10MB.")

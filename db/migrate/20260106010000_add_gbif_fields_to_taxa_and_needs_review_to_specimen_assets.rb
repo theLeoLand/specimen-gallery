@@ -15,4 +15,3 @@ class AddGbifFieldsToTaxaAndNeedsReviewToSpecimenAssets < ActiveRecord::Migratio
     add_index :specimen_assets, :needs_review
   end
 end
-

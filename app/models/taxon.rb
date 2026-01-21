@@ -58,4 +58,3 @@ class Taxon < ApplicationRecord
     self.group = TaxonGroupResolver.resolve(gbif_match)
   end
 end
-

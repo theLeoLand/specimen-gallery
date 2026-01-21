@@ -16,7 +16,7 @@ class SpecimenAssetsController < ApplicationController
     # Determine GBIF match (only if scientific name provided)
     gbif_match = nil
     is_good_match = false
-    
+
     if scientific_name.present? && !unsure_id
       gbif_match = GbifClient.match(scientific_name)
       is_good_match = GbifClient.good_match?(gbif_match)
@@ -37,7 +37,7 @@ class SpecimenAssetsController < ApplicationController
     @specimen_asset = taxon.specimen_assets.build(specimen_asset_params_without_image)
     @specimen_asset.specimen_name = specimen_name
     @specimen_asset.status = "pending"
-    
+
     # Determine needs_review based on hybrid verification policy:
     # 1) User explicitly unsure => needs_review = true
     # 2) Non-living category (minerals/rocks) => needs_review = false (GBIF not applicable)
@@ -48,6 +48,9 @@ class SpecimenAssetsController < ApplicationController
       scientific_name_provided: scientific_name.present?,
       is_good_match: is_good_match
     )
+
+    # Profanity check (non-blocking, just flags for review)
+    apply_profanity_check(@specimen_asset)
 
     # Check file size before attempting Cloudinary (10MB limit on free tier)
     if uploaded_file.present? && uploaded_file.size > 10.megabytes
@@ -60,7 +63,7 @@ class SpecimenAssetsController < ApplicationController
     # Handle image attachment with optional background removal
     bg_removal_failed = false
     bg_removal_total_fail = false
-    
+
     if remove_background && uploaded_file.present?
       result = attach_with_background_removal(uploaded_file)
       if result == true
@@ -81,7 +84,7 @@ class SpecimenAssetsController < ApplicationController
       @specimen_asset.needs_review = true
       flash[:alert] = "Background removal failed — submitted original image for review."
     end
-    
+
     # If total failure, render form with errors (the specific error is already in @specimen_asset.errors)
     if bg_removal_total_fail
       render :new, status: :unprocessable_entity
@@ -113,7 +116,7 @@ class SpecimenAssetsController < ApplicationController
 
   def attach_with_background_removal(uploaded_file)
     # Save original file to temp first (stream may close after Cloudinary upload)
-    original_tempfile = Tempfile.new(["original", File.extname(uploaded_file.original_filename)])
+    original_tempfile = Tempfile.new([ "original", File.extname(uploaded_file.original_filename) ])
     original_tempfile.binmode
     original_tempfile.write(uploaded_file.read)
     original_tempfile.rewind
@@ -128,7 +131,7 @@ class SpecimenAssetsController < ApplicationController
     # Read into memory to ensure we have the full file before attaching
     transformed_tempfile.rewind
     image_data = transformed_tempfile.read
-    
+
     # Create a new StringIO for ActiveStorage (more reliable than tempfile)
     image_io = StringIO.new(image_data)
     image_io.set_encoding(Encoding::BINARY)
@@ -155,18 +158,18 @@ class SpecimenAssetsController < ApplicationController
   rescue CloudinaryBackgroundRemover::RemovalError => e
     Rails.logger.warn("Background removal failed: #{e.message}")
     cleanup_tempfile(original_tempfile)
-    
+
     # Only fallback to original if it's PNG/WebP (otherwise it would fail validation anyway)
     # Extract a user-friendly error message
     error_msg = extract_cloudinary_error(e.message)
-    
+
     if uploaded_file.content_type.in?(%w[image/png image/webp])
-      original_tempfile = Tempfile.new(["original", File.extname(uploaded_file.original_filename)])
+      original_tempfile = Tempfile.new([ "original", File.extname(uploaded_file.original_filename) ])
       original_tempfile.binmode
       uploaded_file.rewind rescue nil
       original_tempfile.write(uploaded_file.read)
       original_tempfile.rewind
-      
+
       @specimen_asset.image.attach(
         io: StringIO.new(original_tempfile.read),
         filename: uploaded_file.original_filename,
@@ -183,18 +186,18 @@ class SpecimenAssetsController < ApplicationController
   rescue => e
     Rails.logger.error("Unexpected error during background removal: #{e.class} - #{e.message}")
     cleanup_tempfile(original_tempfile)
-    
+
     # Extract a user-friendly error message
     error_msg = extract_cloudinary_error(e.message)
-    
+
     # Same logic: only fallback if original is PNG/WebP
     if uploaded_file.content_type.in?(%w[image/png image/webp])
-      original_tempfile = Tempfile.new(["original", File.extname(uploaded_file.original_filename)])
+      original_tempfile = Tempfile.new([ "original", File.extname(uploaded_file.original_filename) ])
       original_tempfile.binmode
       uploaded_file.rewind rescue nil
       original_tempfile.write(uploaded_file.read)
       original_tempfile.rewind
-      
+
       @specimen_asset.image.attach(
         io: StringIO.new(original_tempfile.read),
         filename: uploaded_file.original_filename,
@@ -208,7 +211,7 @@ class SpecimenAssetsController < ApplicationController
       nil
     end
   end
-  
+
   def cleanup_tempfile(tempfile)
     return unless tempfile
     tempfile.close rescue nil
@@ -304,5 +307,23 @@ class SpecimenAssetsController < ApplicationController
     # Rule 3: Living categories need GBIF verification
     # Good match means scientific_name was provided AND GBIF verified it
     !is_good_match
+  end
+
+  # Non-blocking profanity check - flags for review but never blocks submission
+  def apply_profanity_check(specimen_asset)
+    detector = ProfanityDetector.new(
+      specimen_name: specimen_asset.specimen_name,
+      common_name: specimen_asset.common_name
+    )
+
+    return unless detector.flagged?
+
+    # Flag for review
+    specimen_asset.needs_review = true
+
+    # Store flag details in qc_flags (merge with existing)
+    specimen_asset.qc_flags = (specimen_asset.qc_flags || {}).merge(detector.to_qc_flags)
+
+    Rails.logger.info("Profanity detected in fields: #{detector.flagged_fields.join(', ')}")
   end
 end

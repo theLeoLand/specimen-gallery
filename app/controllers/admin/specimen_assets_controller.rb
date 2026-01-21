@@ -7,7 +7,7 @@ module Admin
 
     def index
       @filter = params[:filter] || "pending"
-      
+
       @specimen_assets = case @filter
       when "approved"
         SpecimenAsset.where(status: "approved").order(created_at: :desc)
@@ -16,7 +16,7 @@ module Admin
       else
         SpecimenAsset.where(status: "pending").order(created_at: :desc)
       end
-      
+
       @pending_count = SpecimenAsset.where(status: "pending").count
       @approved_count = SpecimenAsset.where(status: "approved").count
     end
@@ -81,7 +81,7 @@ module Admin
       specimen_name = params[:specimen_asset][:specimen_name].to_s.strip
       scientific_name = params[:specimen_asset][:scientific_name].to_s.strip
       taxon_group = params[:specimen_asset][:taxon_group].presence
-      
+
       # Update or create taxon if scientific name changed
       if scientific_name.present? && scientific_name != @specimen_asset.taxon&.scientific_name
         taxon = find_or_create_taxon(scientific_name, taxon_group)

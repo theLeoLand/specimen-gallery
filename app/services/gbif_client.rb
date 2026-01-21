@@ -89,13 +89,8 @@ class GbifClient
       http.open_timeout = TIMEOUT
       http.read_timeout = TIMEOUT
 
-      # SSL configuration - use system certs, skip CRL check issues
-      if Rails.env.development? || Rails.env.test?
-        # In dev/test, be more lenient with SSL
-        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      else
-        http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-      end
+      # SSL configuration - always verify peer certificates
+      http.verify_mode = OpenSSL::SSL::VERIFY_PEER
 
       request = Net::HTTP::Get.new(uri)
       request["Accept"] = "application/json"
@@ -118,4 +113,3 @@ class GbifClient
     end
   end
 end
-

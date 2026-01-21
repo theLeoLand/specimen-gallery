@@ -7,5 +7,3 @@ class AddCloudinaryFieldsToSpecimenAssets < ActiveRecord::Migration[8.1]
     add_index :specimen_assets, :bg_removed
   end
 end
-
-

@@ -36,7 +36,7 @@ class CloudinaryBackgroundRemover
   def download_transformed
     raise RemovalError, "No transformed URL available" unless @transformed_url
 
-    tempfile = Tempfile.new(["bg_removed", ".png"])
+    tempfile = Tempfile.new([ "bg_removed", ".png" ])
     tempfile.binmode
 
     URI.open(@transformed_url) do |remote|
@@ -63,7 +63,7 @@ class CloudinaryBackgroundRemover
     # Upload to Cloudinary with background removal
     # Using the 'background_removal' effect which requires Cloudinary AI add-on
     Rails.logger.info("CloudinaryBackgroundRemover: Starting upload to Cloudinary...")
-    
+
     result = Cloudinary::Uploader.upload(
       file_path,
       folder: "specimen_gallery/uploads",
@@ -74,7 +74,7 @@ class CloudinaryBackgroundRemover
         { quality: "auto:best" }
       ]
     )
-    
+
     Rails.logger.info("CloudinaryBackgroundRemover: Upload successful, public_id=#{result['public_id']}")
 
     @public_id = result["public_id"]
@@ -104,5 +104,3 @@ class CloudinaryBackgroundRemover
     end
   end
 end
-
-

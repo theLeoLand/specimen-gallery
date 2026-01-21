@@ -24,4 +24,3 @@ module AdminAuth
     end
   end
 end
-

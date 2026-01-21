@@ -12,4 +12,3 @@ class CreateTaxa < ActiveRecord::Migration[8.1]
     add_index :taxa, "LOWER(scientific_name)", unique: true, name: "index_taxa_on_lower_scientific_name"
   end
 end
-
