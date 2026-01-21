@@ -34,9 +34,14 @@
         </div>
 
         <div class="p-4 space-y-2">
-          <% if specimen.common_name.present? %>
-            <p class="font-medium text-stone-800 dark:text-stone-200"><%= specimen.common_name %></p>
-          <% end %>
+          <div class="flex items-center justify-between">
+            <% if specimen.common_name.present? %>
+              <p class="font-medium text-stone-800 dark:text-stone-200"><%= specimen.common_name %></p>
+            <% else %>
+              <p class="font-medium text-stone-800 dark:text-stone-200"><%= specimen.display_name %></p>
+            <% end %>
+            <%= render "shared/flag_menu", specimen: specimen %>
+          </div>
 
           <div class="flex items-center justify-between">
             <% if specimen.license == "CC0" %>

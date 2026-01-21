@@ -14,12 +14,21 @@ Rails.application.routes.draw do
       get :suggest
     end
   end
-  resources :specimen_assets, only: %i[new create]
+  resources :specimen_assets, only: %i[new create] do
+    resources :flags, only: %i[create]
+  end
 
   namespace :admin do
     resources :specimen_assets, only: %i[index edit update destroy] do
       member do
         patch :unpublish
+      end
+    end
+    resources :flags, only: %i[index] do
+      member do
+        patch :resolve
+        patch :dismiss
+        patch :mark_needs_review
       end
     end
   end

@@ -1,0 +1,131 @@
+<div class="w-full">
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="font-serif text-4xl text-stone-900 dark:text-stone-100">Admin</h1>
+      <p class="text-stone-600 dark:text-stone-400 mt-1">Community flags</p>
+    </div>
+  </div>
+
+  <!-- Filter tabs -->
+  <div class="flex items-center gap-1 mb-6 border-b border-stone-200 dark:border-stone-700">
+    <%= link_to admin_specimen_assets_path(filter: "pending"),
+      class: "px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors border-transparent text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300" do %>
+      Pending
+      <span class="ml-1.5 px-2 py-0.5 rounded-full text-xs bg-stone-100 dark:bg-stone-700 text-stone-500 dark:text-stone-400">
+        <%= SpecimenAsset.where(status: "pending").count %>
+      </span>
+    <% end %>
+
+    <%= link_to admin_specimen_assets_path(filter: "approved"),
+      class: "px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors border-transparent text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300" do %>
+      Live
+      <span class="ml-1.5 px-2 py-0.5 rounded-full text-xs bg-stone-100 dark:bg-stone-700 text-stone-500 dark:text-stone-400">
+        <%= SpecimenAsset.where(status: "approved").count %>
+      </span>
+    <% end %>
+
+    <%= link_to admin_flags_path,
+      class: "px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors border-red-500 text-red-600 dark:text-red-400" do %>
+      Flags
+      <span class="ml-1.5 px-2 py-0.5 rounded-full text-xs <%= @open_count > 0 ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' : 'bg-stone-100 dark:bg-stone-700 text-stone-500 dark:text-stone-400' %>">
+        <%= @open_count %>
+      </span>
+    <% end %>
+  </div>
+
+  <% if @flags.any? %>
+    <div class="space-y-4">
+      <% @flags.each do |flag| %>
+        <div class="bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-2xl p-6 flex items-start gap-6">
+          <!-- Thumbnail -->
+          <% if flag.specimen_asset&.image&.attached? %>
+            <%= link_to taxon_path(flag.specimen_asset.taxon),
+              class: "block w-20 h-20 flex-shrink-0 bg-gradient-to-br from-stone-100 to-stone-200 dark:from-stone-700 dark:to-stone-600 rounded-xl overflow-hidden hover:ring-2 hover:ring-amber-400 transition-all",
+              target: "_blank" do %>
+              <%= image_tag flag.specimen_asset.image,
+                alt: flag.specimen_asset.display_name,
+                class: "w-full h-full object-contain p-1" %>
+            <% end %>
+          <% end %>
+
+          <!-- Details -->
+          <div class="flex-grow min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <h3 class="font-medium text-stone-900 dark:text-stone-100 truncate">
+                <%= flag.specimen_asset&.display_name || "Unknown specimen" %>
+              </h3>
+              <span class="inline-block px-2 py-0.5 bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300 rounded text-xs font-medium">
+                <%= flag.reason_label %>
+              </span>
+            </div>
+
+            <% if flag.details.present? %>
+              <p class="text-sm text-stone-600 dark:text-stone-400 mb-2 line-clamp-2">
+                "<%= truncate(flag.details, length: 150) %>"
+              </p>
+            <% end %>
+
+            <p class="text-xs text-stone-500 dark:text-stone-400">
+              Reported <%= time_ago_in_words(flag.created_at) %> ago
+              <% if flag.specimen_asset&.status == "approved" %>
+                · <span class="text-emerald-600 dark:text-emerald-400">Live</span>
+              <% else %>
+                · <span class="text-amber-600 dark:text-amber-400">Pending</span>
+              <% end %>
+            </p>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex-shrink-0 flex flex-col gap-2">
+            <div class="flex gap-2">
+              <%= button_to resolve_admin_flag_path(flag),
+                method: :patch,
+                class: "px-3 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded-full hover:bg-emerald-700 transition-colors" do %>
+                ✓ Resolve
+              <% end %>
+
+              <%= button_to dismiss_admin_flag_path(flag),
+                method: :patch,
+                class: "px-3 py-1.5 border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-400 text-xs font-medium rounded-full hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors" do %>
+                Dismiss
+              <% end %>
+            </div>
+
+            <div class="flex gap-2">
+              <%= link_to taxon_path(flag.specimen_asset.taxon),
+                class: "px-3 py-1.5 text-xs text-stone-500 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors",
+                target: "_blank" do %>
+                View specimen →
+              <% end %>
+
+              <% unless flag.specimen_asset.needs_review? %>
+                <%= button_to mark_needs_review_admin_flag_path(flag),
+                  method: :patch,
+                  data: { turbo_confirm: "Mark this specimen for review?" },
+                  class: "px-3 py-1.5 bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-xs font-medium rounded-full hover:bg-amber-200 dark:hover:bg-amber-800 transition-colors" do %>
+                  Mark for review
+                <% end %>
+              <% else %>
+                <span class="px-3 py-1.5 text-xs text-amber-600 dark:text-amber-400">
+                  Already needs review
+                </span>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="text-center py-16 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-2xl">
+      <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-stone-100 dark:bg-stone-700 flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-stone-400 dark:text-stone-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+      <p class="text-lg text-stone-600 dark:text-stone-300 mb-2">No open flags</p>
+      <p class="text-sm text-stone-500 dark:text-stone-400">Community reports will appear here.</p>
+    </div>
+  <% end %>
+</div>
+

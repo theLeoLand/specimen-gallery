@@ -19,6 +19,7 @@ module Admin
 
       @pending_count = SpecimenAsset.where(status: "pending").count
       @approved_count = SpecimenAsset.where(status: "approved").count
+      @flags_count = Flag.open_flags.count
     end
 
     def edit

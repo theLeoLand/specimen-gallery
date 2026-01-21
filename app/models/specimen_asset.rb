@@ -2,6 +2,7 @@
 class SpecimenAsset < ApplicationRecord
   belongs_to :taxon
   has_one_attached :image
+  has_many :flags, dependent: :destroy
 
   STATUSES = %w[pending approved rejected].freeze
   LICENSES = %w[CC0 CC_BY].freeze
@@ -39,6 +40,11 @@ class SpecimenAsset < ApplicationRecord
   # Fields that contained profanity (if any)
   def profanity_flagged_fields
     qc_flags&.dig("profanity_fields") || []
+  end
+
+  # Count of open community flags
+  def open_flags_count
+    flags.open_flags.count
   end
 
   private
