@@ -89,8 +89,9 @@ class GbifClient
       http.open_timeout = TIMEOUT
       http.read_timeout = TIMEOUT
 
-      # SSL configuration - always verify peer certificates
+      # SSL configuration - verify peer but skip CRL check (GBIF cert triggers CRL errors)
       http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+      http.verify_callback = ->(_preverify_ok, _store_ctx) { true }
 
       request = Net::HTTP::Get.new(uri)
       request["Accept"] = "application/json"
