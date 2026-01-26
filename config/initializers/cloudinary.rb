@@ -12,5 +12,7 @@ if ENV["CLOUDINARY_CLOUD_NAME"].present?
     config.secure     = true
   end
 elsif Rails.env.production?
-  raise "Cloudinary credentials not configured! Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET"
+  # Warn but don't crash - allows db:prepare and other tasks to run
+  # Uploads will fail gracefully if Cloudinary isn't configured
+  Rails.logger.warn "⚠️  Cloudinary credentials not configured. Image uploads will not work until CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET are set."
 end

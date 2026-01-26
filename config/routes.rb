@@ -18,6 +18,7 @@ Rails.application.routes.draw do
     resources :flags, only: %i[create]
   end
 
+  # Admin routes - protected by HTTP Basic Auth (see AdminAuth concern)
   namespace :admin do
     resources :specimen_assets, only: %i[index edit update destroy] do
       member do

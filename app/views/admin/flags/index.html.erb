@@ -1,4 +1,4 @@
-<div class="w-full">
+<div class="w-full pt-4 md:pt-0">
   <!-- Header -->
   <div class="flex items-center justify-between mb-6">
     <div>
@@ -37,81 +37,79 @@
   <% if @flags.any? %>
     <div class="space-y-4">
       <% @flags.each do |flag| %>
-        <div class="bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-2xl p-6 flex items-start gap-6">
-          <!-- Thumbnail -->
-          <% if flag.specimen_asset&.image&.attached? %>
-            <%= link_to taxon_path(flag.specimen_asset.taxon),
-              class: "block w-20 h-20 flex-shrink-0 bg-gradient-to-br from-stone-100 to-stone-200 dark:from-stone-700 dark:to-stone-600 rounded-xl overflow-hidden hover:ring-2 hover:ring-amber-400 transition-all",
-              target: "_blank" do %>
-              <%= image_tag flag.specimen_asset.image,
-                alt: flag.specimen_asset.display_name,
-                class: "w-full h-full object-contain p-1" %>
+        <div class="bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-2xl p-4 md:p-6 flex flex-col md:flex-row md:items-center md:gap-6">
+          <!-- Thumbnail and Details (stacked on mobile, horizontal on desktop) -->
+          <div class="flex gap-4 flex-grow">
+            <!-- Thumbnail -->
+            <% if flag.specimen_asset&.image&.attached? %>
+              <%= link_to taxon_path(flag.specimen_asset.taxon),
+                class: "block w-16 h-16 md:w-20 md:h-20 flex-shrink-0 bg-gradient-to-br from-stone-100 to-stone-200 dark:from-stone-700 dark:to-stone-600 rounded-xl overflow-hidden hover:ring-2 hover:ring-amber-400 transition-all",
+                target: "_blank" do %>
+                <%= image_tag flag.specimen_asset.image,
+                  alt: flag.specimen_asset.display_name,
+                  class: "w-full h-full object-contain p-1" %>
+              <% end %>
             <% end %>
-          <% end %>
 
-          <!-- Details -->
-          <div class="flex-grow min-w-0">
-            <div class="flex items-center gap-2 mb-1">
-              <h3 class="font-medium text-stone-900 dark:text-stone-100 truncate">
+            <!-- Details -->
+            <div class="flex-grow min-w-0">
+              <h3 class="font-medium text-stone-900 dark:text-stone-100 truncate mb-1">
                 <%= flag.specimen_asset&.display_name || "Unknown specimen" %>
               </h3>
-              <span class="inline-block px-2 py-0.5 bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300 rounded text-xs font-medium">
+              
+              <span class="inline-block px-2 py-0.5 bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300 rounded text-xs font-medium mb-2">
                 <%= flag.reason_label %>
               </span>
-            </div>
 
-            <% if flag.details.present? %>
-              <p class="text-sm text-stone-600 dark:text-stone-400 mb-2 line-clamp-2">
-                "<%= truncate(flag.details, length: 150) %>"
-              </p>
-            <% end %>
-
-            <p class="text-xs text-stone-500 dark:text-stone-400">
-              Reported <%= time_ago_in_words(flag.created_at) %> ago
-              <% if flag.specimen_asset&.status == "approved" %>
-                · <span class="text-emerald-600 dark:text-emerald-400">Live</span>
-              <% else %>
-                · <span class="text-amber-600 dark:text-amber-400">Pending</span>
+              <% if flag.details.present? %>
+                <p class="text-sm text-stone-600 dark:text-stone-400 mb-2 line-clamp-2">
+                  "<%= truncate(flag.details, length: 150) %>"
+                </p>
               <% end %>
-            </p>
+
+              <p class="text-xs text-stone-500 dark:text-stone-400">
+                Reported <%= time_ago_in_words(flag.created_at) %> ago
+                <% if flag.specimen_asset&.status == "approved" %>
+                  · <span class="text-emerald-600 dark:text-emerald-400">Live</span>
+                <% else %>
+                  · <span class="text-amber-600 dark:text-amber-400">Pending</span>
+                <% end %>
+              </p>
+            </div>
           </div>
 
           <!-- Actions -->
-          <div class="flex-shrink-0 flex flex-col gap-2">
-            <div class="flex gap-2">
-              <%= button_to resolve_admin_flag_path(flag),
+          <div class="flex-shrink-0 flex flex-wrap gap-2 mt-4 pt-4 border-t border-stone-200 dark:border-stone-700 md:mt-0 md:pt-0 md:border-0">
+            <%= button_to resolve_admin_flag_path(flag),
+              method: :patch,
+              class: "px-3 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded-full hover:bg-emerald-700 transition-colors" do %>
+              ✓ Resolve
+            <% end %>
+
+            <%= button_to dismiss_admin_flag_path(flag),
+              method: :patch,
+              class: "px-3 py-1.5 border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-400 text-xs font-medium rounded-full hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors" do %>
+              Dismiss
+            <% end %>
+
+            <%= link_to taxon_path(flag.specimen_asset.taxon),
+              class: "px-3 py-1.5 text-xs text-stone-500 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors",
+              target: "_blank" do %>
+              View specimen →
+            <% end %>
+
+            <% unless flag.specimen_asset.needs_review? %>
+              <%= button_to mark_needs_review_admin_flag_path(flag),
                 method: :patch,
-                class: "px-3 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded-full hover:bg-emerald-700 transition-colors" do %>
-                ✓ Resolve
+                data: { turbo_confirm: "Mark this specimen for review?" },
+                class: "px-3 py-1.5 bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-xs font-medium rounded-full hover:bg-amber-200 dark:hover:bg-amber-800 transition-colors" do %>
+                Mark for review
               <% end %>
-
-              <%= button_to dismiss_admin_flag_path(flag),
-                method: :patch,
-                class: "px-3 py-1.5 border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-400 text-xs font-medium rounded-full hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors" do %>
-                Dismiss
-              <% end %>
-            </div>
-
-            <div class="flex gap-2">
-              <%= link_to taxon_path(flag.specimen_asset.taxon),
-                class: "px-3 py-1.5 text-xs text-stone-500 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors",
-                target: "_blank" do %>
-                View specimen →
-              <% end %>
-
-              <% unless flag.specimen_asset.needs_review? %>
-                <%= button_to mark_needs_review_admin_flag_path(flag),
-                  method: :patch,
-                  data: { turbo_confirm: "Mark this specimen for review?" },
-                  class: "px-3 py-1.5 bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-xs font-medium rounded-full hover:bg-amber-200 dark:hover:bg-amber-800 transition-colors" do %>
-                  Mark for review
-                <% end %>
-              <% else %>
-                <span class="px-3 py-1.5 text-xs text-amber-600 dark:text-amber-400">
-                  Already needs review
-                </span>
-              <% end %>
-            </div>
+            <% else %>
+              <span class="px-3 py-1.5 text-xs text-amber-600 dark:text-amber-400">
+                Already needs review
+              </span>
+            <% end %>
           </div>
         </div>
       <% end %>
