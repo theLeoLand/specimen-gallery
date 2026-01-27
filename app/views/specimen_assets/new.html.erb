@@ -13,7 +13,7 @@
     </div>
   <% end %>
 
-  <%= form_with model: @specimen_asset, class: "space-y-6", data: { controller: "license" } do |f| %>
+  <%= form_with model: @specimen_asset, class: "space-y-6", data: { controller: "license image-upload" } do |f| %>
     <!-- Specimen Name (REQUIRED) -->
     <div>
       <%= f.label :specimen_name, "Specimen name", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
@@ -108,14 +108,47 @@
         <%= f.file_field :image,
           accept: "image/png,image/webp,image/jpeg,image/heic",
           required: true,
+          data: { 
+            image_upload_target: "fileInput",
+            action: "change->image-upload#fileSelected"
+          },
           class: "block w-full text-sm text-stone-600 dark:text-stone-400 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-amber-100 file:text-amber-800 dark:file:bg-amber-800 dark:file:text-amber-100 hover:file:bg-amber-200 dark:hover:file:bg-amber-700 file:cursor-pointer cursor-pointer" %>
       </div>
-      <p class="mt-2 text-xs text-stone-500 dark:text-stone-400">PNG or WebP with transparent background, or use background removal below.</p>
+
+      <!-- File info display -->
+      <div data-image-upload-target="fileInfo" class="hidden mt-3 p-3 bg-stone-100 dark:bg-stone-800 rounded-lg">
+        <div class="flex items-center justify-between text-sm">
+          <span data-image-upload-target="fileName" class="text-stone-700 dark:text-stone-300 truncate max-w-[200px]"></span>
+          <span data-image-upload-target="fileSize" class="text-stone-500 dark:text-stone-400 ml-2"></span>
+        </div>
+      </div>
+
+      <!-- Compression status -->
+      <div data-image-upload-target="status" class="hidden mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+        <div class="flex items-center gap-2 text-sm text-blue-800 dark:text-blue-300">
+          <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span data-image-upload-target="statusText">Optimizing image…</span>
+        </div>
+      </div>
+
+      <!-- Warning/success messages -->
+      <div data-image-upload-target="warning" class="hidden mt-3 p-3 border rounded-lg text-sm">
+        <span data-image-upload-target="warningText"></span>
+      </div>
+
+      <p class="mt-2 text-xs text-stone-500 dark:text-stone-400">PNG or WebP with transparent background, or use background removal below. Large files are automatically optimized.</p>
     </div>
 
     <div class="p-4 bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl">
       <label class="flex items-start gap-3 cursor-pointer">
         <%= check_box_tag "specimen_asset[remove_background]", "1", false,
+          data: { 
+            image_upload_target: "removeBackground",
+            action: "change->image-upload#bgToggleChanged"
+          },
           class: "mt-1 w-4 h-4 text-amber-600 border-stone-300 dark:border-stone-600 rounded focus:ring-amber-500" %>
         <div>
           <span class="text-sm font-medium text-stone-700 dark:text-stone-300">Remove background automatically</span>
@@ -127,6 +160,7 @@
 
     <div class="pt-4">
       <%= f.submit "Submit Specimen",
+        data: { image_upload_target: "submitButton" },
         class: "w-full px-6 py-4 bg-amber-600 text-white font-medium rounded-full hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 dark:focus:ring-offset-stone-900 transition-colors cursor-pointer" %>
     </div>
 
