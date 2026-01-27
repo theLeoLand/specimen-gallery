@@ -3,7 +3,7 @@ require "test_helper"
 class FlagsControllerTest < ActionDispatch::IntegrationTest
   def setup
     @taxon = Taxon.create!(scientific_name: "Test Species", group: "other")
-    @specimen = @taxon.specimen_assets.create!(
+    @specimen = @taxon.specimen_assets.build(
       specimen_name: "Test Specimen",
       status: "approved",
       license: "CC0"
@@ -13,6 +13,7 @@ class FlagsControllerTest < ActionDispatch::IntegrationTest
       filename: "test.png",
       content_type: "image/png"
     )
+    @specimen.save!
 
     # Clear rate limit cache
     Rails.cache.clear
@@ -45,15 +46,12 @@ class FlagsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
   end
 
-  test "rate limits after 5 flags" do
-    5.times do
-      post specimen_asset_flags_path(@specimen),
-        params: { flag: { reason: "wrong_name" } },
-        as: :json
-      assert_response :success
-    end
+  test "rate limits when limit reached" do
+    # Set cache to the limit (30/hr) - use the exact key format the controller uses
+    # Integration tests use 127.0.0.1 as remote_ip
+    Rails.cache.write("flag_rate:127.0.0.1", 30, expires_in: 1.hour)
 
-    # 6th flag should be rate limited
+    # This should be rate limited (already at 30)
     post specimen_asset_flags_path(@specimen),
       params: { flag: { reason: "wrong_name" } },
       as: :json

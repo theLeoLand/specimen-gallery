@@ -1,7 +1,7 @@
 # app/controllers/flags_controller.rb
 class FlagsController < ApplicationController
-  # Rate limit: max 5 flags per IP per hour
-  RATE_LIMIT = 5
+  # Rate limit: max 30 flags per IP per hour (generous for legitimate flagging)
+  RATE_LIMIT = 30
   RATE_WINDOW = 1.hour
 
   def create

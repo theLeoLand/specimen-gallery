@@ -1,10 +1,22 @@
 # app/controllers/specimen_assets_controller.rb
 class SpecimenAssetsController < ApplicationController
+  # Rate limit: max 10 uploads per IP per hour
+  UPLOAD_RATE_LIMIT = 10
+  UPLOAD_RATE_WINDOW = 1.hour
+
   def new
     @specimen_asset = SpecimenAsset.new
   end
 
   def create
+    # Check rate limit first
+    if upload_rate_limited?
+      @specimen_asset = SpecimenAsset.new(specimen_asset_params_without_image)
+      flash.now[:alert] = "Too many uploads. Please wait an hour before uploading again."
+      render :new, status: :too_many_requests
+      return
+    end
+
     # New universal flow: specimen_name is required, scientific_name is optional
     specimen_name = params[:specimen_asset][:specimen_name].to_s.strip
     scientific_name = params[:specimen_asset][:scientific_name].to_s.strip
@@ -92,6 +104,7 @@ class SpecimenAssetsController < ApplicationController
     end
 
     if @specimen_asset.save
+      increment_upload_rate_counter
       redirect_to root_path, notice: submission_notice(is_good_match, bg_removal_failed)
     else
       render :new, status: :unprocessable_entity
@@ -325,5 +338,20 @@ class SpecimenAssetsController < ApplicationController
     specimen_asset.qc_flags = (specimen_asset.qc_flags || {}).merge(detector.to_qc_flags)
 
     Rails.logger.info("Profanity detected in fields: #{detector.flagged_fields.join(', ')}")
+  end
+
+  # Rate limiting helpers
+  def upload_rate_limit_key
+    "upload_rate:#{request.remote_ip}"
+  end
+
+  def upload_rate_limited?
+    count = Rails.cache.read(upload_rate_limit_key) || 0
+    count >= UPLOAD_RATE_LIMIT
+  end
+
+  def increment_upload_rate_counter
+    current = Rails.cache.read(upload_rate_limit_key) || 0
+    Rails.cache.write(upload_rate_limit_key, current + 1, expires_in: UPLOAD_RATE_WINDOW)
   end
 end
