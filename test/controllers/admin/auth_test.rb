@@ -28,4 +28,3 @@ class Admin::AuthTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 end
-

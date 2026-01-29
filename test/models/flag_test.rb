@@ -4,17 +4,18 @@ class FlagTest < ActiveSupport::TestCase
   def setup
     # Create a minimal taxon and specimen for testing
     @taxon = Taxon.create!(scientific_name: "Test Species", group: "other")
-    @specimen = @taxon.specimen_assets.create!(
+    @specimen = @taxon.specimen_assets.build(
       specimen_name: "Test Specimen",
       status: "approved",
       license: "CC0"
     )
-    # Attach a minimal test image
+    # Attach image before saving (required by model validation)
     @specimen.image.attach(
       io: File.open(Rails.root.join("test/fixtures/files/test_image.png")),
       filename: "test.png",
       content_type: "image/png"
     )
+    @specimen.save!
   end
 
   test "valid flag with required fields" do

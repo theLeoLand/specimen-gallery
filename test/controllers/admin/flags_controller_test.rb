@@ -4,7 +4,7 @@ module Admin
   class FlagsControllerTest < ActionDispatch::IntegrationTest
     def setup
       @taxon = Taxon.create!(scientific_name: "Test Species", group: "other")
-      @specimen = @taxon.specimen_assets.create!(
+      @specimen = @taxon.specimen_assets.build(
         specimen_name: "Test Specimen",
         status: "approved",
         license: "CC0"
@@ -14,6 +14,7 @@ module Admin
         filename: "test.png",
         content_type: "image/png"
       )
+      @specimen.save!
 
       @flag = Flag.create!(
         specimen_asset: @specimen,
@@ -23,7 +24,10 @@ module Admin
       )
 
       @auth_headers = {
-        "HTTP_AUTHORIZATION" => ActionController::HttpAuthentication::Basic.encode_credentials("admin", "admin")
+        "HTTP_AUTHORIZATION" => ActionController::HttpAuthentication::Basic.encode_credentials(
+          ENV.fetch("ADMIN_USERNAME", "admin"),
+          ENV.fetch("ADMIN_PASSWORD", "admin")
+        )
       }
     end
 
