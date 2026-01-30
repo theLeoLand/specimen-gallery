@@ -1,8 +1,14 @@
 # app/controllers/specimen_assets_controller.rb
 class SpecimenAssetsController < ApplicationController
+  include AnonymousIdentity
+
   # Rate limit: max 10 uploads per IP per hour
   UPLOAD_RATE_LIMIT = 10
   UPLOAD_RATE_WINDOW = 1.hour
+
+  def show
+    @specimen_asset = SpecimenAsset.includes(:taxon, :top_suggested_taxon).find(params[:id])
+  end
 
   def new
     @specimen_asset = SpecimenAsset.new
@@ -115,7 +121,130 @@ class SpecimenAssetsController < ApplicationController
     render :new, status: :unprocessable_entity
   end
 
+  # Community ID voting: confirm current taxon assignment
+  def confirm_id
+    @specimen_asset = SpecimenAsset.find(params[:id])
+
+    if vote_rate_limited?
+      respond_to do |format|
+        format.turbo_stream { render_vote_error("Too many votes. Please try again later.") }
+        format.html { redirect_to @specimen_asset, alert: "Too many votes. Please try again later." }
+      end
+      return
+    end
+
+    vote = @specimen_asset.id_votes.build(
+      vote_kind: "confirm",
+      voter_fingerprint: voter_fingerprint,
+      voter_ip_hash: voter_ip_hash
+    )
+
+    if vote.save
+      increment_vote_rate
+      respond_to do |format|
+        format.turbo_stream { render_consensus_update }
+        format.html { redirect_to @specimen_asset, notice: "Thanks for confirming!" }
+      end
+    else
+      respond_to do |format|
+        format.turbo_stream { render_vote_error(vote.errors.full_messages.first || "Already voted") }
+        format.html { redirect_to @specimen_asset, alert: vote.errors.full_messages.first || "Already voted" }
+      end
+    end
+  end
+
+  # Community ID voting: suggest a different taxon
+  def suggest_id
+    @specimen_asset = SpecimenAsset.find(params[:id])
+
+    if vote_rate_limited?
+      respond_to do |format|
+        format.turbo_stream { render_vote_error("Too many votes. Please try again later.") }
+        format.html { redirect_to @specimen_asset, alert: "Too many votes. Please try again later." }
+      end
+      return
+    end
+
+    # Find or create taxon from name (with GBIF lookup)
+    taxon_name = params[:suggested_taxon_name].to_s.strip
+    if taxon_name.blank?
+      respond_to do |format|
+        format.turbo_stream { render_vote_error("Please enter a taxon name") }
+        format.html { redirect_to @specimen_asset, alert: "Please enter a taxon name" }
+      end
+      return
+    end
+
+    suggested_taxon = find_or_create_suggested_taxon(taxon_name)
+
+    vote = @specimen_asset.id_votes.build(
+      vote_kind: "suggest",
+      suggested_taxon: suggested_taxon,
+      voter_fingerprint: voter_fingerprint,
+      voter_ip_hash: voter_ip_hash
+    )
+
+    if vote.save
+      increment_vote_rate
+      respond_to do |format|
+        format.turbo_stream { render_consensus_update }
+        format.html { redirect_to @specimen_asset, notice: "Thanks for your suggestion!" }
+      end
+    else
+      respond_to do |format|
+        format.turbo_stream { render_vote_error(vote.errors.full_messages.first || "Already voted") }
+        format.html { redirect_to @specimen_asset, alert: vote.errors.full_messages.first || "Already voted" }
+      end
+    end
+  end
+
   private
+
+  def render_consensus_update
+    render turbo_stream: turbo_stream.replace(
+      "consensus_widget",
+      partial: "specimen_assets/consensus_widget",
+      locals: { specimen_asset: @specimen_asset.reload }
+    )
+  end
+
+  def render_vote_error(message)
+    render turbo_stream: turbo_stream.replace(
+      "vote_feedback",
+      partial: "specimen_assets/vote_feedback",
+      locals: { message: message, type: "error" }
+    )
+  end
+
+  def find_or_create_suggested_taxon(taxon_name)
+    # Try GBIF match first
+    gbif_match = GbifClient.match(taxon_name)
+    is_good_match = GbifClient.good_match?(gbif_match)
+
+    if is_good_match && gbif_match
+      # Use GBIF canonical name
+      canonical_name = gbif_match[:canonical_name].presence || taxon_name
+      taxon = Taxon.find_by(scientific_name: canonical_name) ||
+              Taxon.find_by(gbif_key: gbif_match[:key])
+
+      unless taxon
+        taxon = Taxon.create!(
+          scientific_name: canonical_name,
+          gbif_key: gbif_match[:key],
+          gbif_rank: gbif_match[:rank],
+          taxon_source: "gbif",
+          taxon_id: gbif_match[:key].to_s,
+          group: TaxonGroupResolver.resolve_from_gbif(gbif_match)
+        )
+      end
+      taxon
+    else
+      # No GBIF match - find or create by name
+      Taxon.find_or_create_by!(scientific_name: taxon_name) do |t|
+        t.group = "other"
+      end
+    end
+  end
 
   def specimen_asset_params_without_image
     params.require(:specimen_asset).permit(
@@ -123,7 +252,15 @@ class SpecimenAssetsController < ApplicationController
       :common_name,
       :license,
       :attribution_name,
-      :attribution_url
+      :attribution_url,
+      # Trait fields
+      :sex,
+      :life_stage,
+      :view,
+      :part,
+      :morph,
+      :region,
+      :notes
     )
   end
 

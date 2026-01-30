@@ -5,6 +5,14 @@ class TaxaController < ApplicationController
     @current_group = params[:group].presence
     @groups = TaxonGroupResolver.all_with_metadata
 
+    # Store filter params
+    @filters = {
+      sex: params[:sex].presence,
+      life_stage: params[:life_stage].presence,
+      view: params[:view].presence,
+      part: params[:part].presence
+    }
+
     # Filter by group
     if @current_group.present? && @current_group != "all"
       @taxa = @taxa.where(group: @current_group)
@@ -19,12 +27,24 @@ class TaxaController < ApplicationController
         .distinct
     end
 
+    # Filter by specimen traits (only show taxa that have matching specimens)
+    if @filters.values.any?(&:present?)
+      @taxa = @taxa
+        .joins(:specimen_assets)
+        .where(specimen_assets: { status: "approved" })
+        .then { |scope| @filters[:sex].present? ? scope.where(specimen_assets: { sex: @filters[:sex] }) : scope }
+        .then { |scope| @filters[:life_stage].present? ? scope.where(specimen_assets: { life_stage: @filters[:life_stage] }) : scope }
+        .then { |scope| @filters[:view].present? ? scope.where(specimen_assets: { view: @filters[:view] }) : scope }
+        .then { |scope| @filters[:part].present? ? scope.where(specimen_assets: { part: @filters[:part] }) : scope }
+        .distinct
+    end
+
     @taxa = @taxa.order(:scientific_name)
   end
 
   def show
     @taxon = Taxon.find(params[:id])
-    @specimen_assets = @taxon.approved_assets
+    @specimen_assets = @taxon.approved_assets.includes(image_attachment: :blob)
 
     if @specimen_assets.empty?
       head :not_found

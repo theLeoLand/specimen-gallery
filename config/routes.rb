@@ -9,13 +9,18 @@ Rails.application.routes.draw do
   get "browse", to: "taxa#index", as: :browse
   get "taxa", to: redirect("/browse")  # Redirect old URL
 
-  resources :taxa, only: %i[show] do
+  resources :taxa, only: %i[show index] do
     collection do
       get :suggest
     end
   end
-  resources :specimen_assets, only: %i[new create] do
+
+  resources :specimen_assets, only: %i[show new create] do
     resources :flags, only: %i[create]
+    member do
+      post :confirm_id
+      post :suggest_id
+    end
   end
 
   # Admin routes - protected by HTTP Basic Auth (see AdminAuth concern)

@@ -1,0 +1,41 @@
+<div id="consensus_widget" class="bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl p-4">
+  <div class="flex items-center justify-between mb-3">
+    <h3 class="font-medium text-stone-900 dark:text-stone-100">Community ID</h3>
+    <span class="px-2 py-1 text-xs font-medium rounded-full <%= specimen_asset.id_status_badge_class %>">
+      <%= specimen_asset.id_status.titleize %>
+    </span>
+  </div>
+
+  <div class="flex gap-4 text-sm">
+    <div class="flex items-center gap-1.5">
+      <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+      </svg>
+      <span class="text-stone-600 dark:text-stone-400">
+        <%= specimen_asset.confirm_count %> confirm<%= specimen_asset.confirm_count == 1 ? "" : "s" %>
+      </span>
+    </div>
+
+    <div class="flex items-center gap-1.5">
+      <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <span class="text-stone-600 dark:text-stone-400">
+        <%= specimen_asset.suggest_count %> suggestion<%= specimen_asset.suggest_count == 1 ? "" : "s" %>
+      </span>
+    </div>
+  </div>
+
+  <% if specimen_asset.contested? && specimen_asset.top_suggested_taxon.present? %>
+    <div class="mt-3 p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+      <p class="text-xs text-amber-800 dark:text-amber-300">
+        Top suggestion: 
+        <%= link_to specimen_asset.top_suggested_taxon.scientific_name,
+          taxon_path(specimen_asset.top_suggested_taxon),
+          class: "font-medium hover:underline" %>
+        (<%= specimen_asset.top_suggested_count %> vote<%= specimen_asset.top_suggested_count == 1 ? "" : "s" %>)
+      </p>
+    </div>
+  <% end %>
+</div>
+

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_21_193411) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_30_051516) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -55,6 +55,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_21_193411) do
     t.index ["status"], name: "index_flags_on_status"
   end
 
+  create_table "id_votes", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "specimen_asset_id", null: false
+    t.bigint "suggested_taxon_id"
+    t.datetime "updated_at", null: false
+    t.string "vote_kind", null: false
+    t.string "voter_fingerprint", null: false
+    t.string "voter_ip_hash", null: false
+    t.index ["specimen_asset_id", "voter_fingerprint"], name: "index_id_votes_on_specimen_asset_id_and_voter_fingerprint", unique: true
+    t.index ["specimen_asset_id"], name: "index_id_votes_on_specimen_asset_id"
+    t.index ["suggested_taxon_id"], name: "index_id_votes_on_suggested_taxon_id"
+    t.index ["voter_ip_hash"], name: "index_id_votes_on_voter_ip_hash"
+  end
+
   create_table "specimen_assets", force: :cascade do |t|
     t.string "attribution_name"
     t.string "attribution_url"
@@ -62,20 +76,38 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_21_193411) do
     t.text "cloudinary_asset_url"
     t.string "cloudinary_public_id"
     t.string "common_name"
+    t.integer "confirm_count", default: 0, null: false
     t.datetime "created_at", null: false
+    t.string "id_status", default: "unverified", null: false
     t.string "license"
+    t.string "life_stage"
+    t.string "morph"
     t.boolean "needs_review", default: false, null: false
+    t.text "notes"
+    t.string "part"
     t.jsonb "qc_flags"
+    t.string "region"
+    t.string "sex"
     t.string "sha256_hash"
     t.string "specimen_name"
     t.string "status"
+    t.integer "suggest_count", default: 0, null: false
     t.bigint "taxon_id"
+    t.integer "top_suggested_count", default: 0, null: false
+    t.bigint "top_suggested_taxon_id"
     t.datetime "updated_at", null: false
+    t.string "view"
     t.index ["bg_removed"], name: "index_specimen_assets_on_bg_removed"
+    t.index ["id_status"], name: "index_specimen_assets_on_id_status"
+    t.index ["life_stage"], name: "index_specimen_assets_on_life_stage"
     t.index ["needs_review"], name: "index_specimen_assets_on_needs_review"
+    t.index ["part"], name: "index_specimen_assets_on_part"
+    t.index ["sex"], name: "index_specimen_assets_on_sex"
     t.index ["sha256_hash"], name: "index_specimen_assets_on_sha256_hash", unique: true
     t.index ["specimen_name"], name: "index_specimen_assets_on_specimen_name"
     t.index ["taxon_id"], name: "index_specimen_assets_on_taxon_id"
+    t.index ["top_suggested_taxon_id"], name: "index_specimen_assets_on_top_suggested_taxon_id"
+    t.index ["view"], name: "index_specimen_assets_on_view"
   end
 
   create_table "taxa", force: :cascade do |t|
@@ -99,5 +131,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_21_193411) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "flags", "specimen_assets"
+  add_foreign_key "id_votes", "specimen_assets"
+  add_foreign_key "id_votes", "taxa", column: "suggested_taxon_id"
   add_foreign_key "specimen_assets", "taxa"
+  add_foreign_key "specimen_assets", "taxa", column: "top_suggested_taxon_id"
 end

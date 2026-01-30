@@ -1,11 +1,20 @@
 # app/models/specimen_asset.rb
 class SpecimenAsset < ApplicationRecord
   belongs_to :taxon
+  belongs_to :top_suggested_taxon, class_name: "Taxon", optional: true
   has_one_attached :image
   has_many :flags, dependent: :destroy
+  has_many :id_votes, dependent: :destroy
 
   STATUSES = %w[pending approved rejected].freeze
   LICENSES = %w[CC0 CC_BY].freeze
+  ID_STATUSES = %w[unverified verified contested].freeze
+
+  # Trait enums (stored as strings for flexibility)
+  SEXES = %w[male female unknown].freeze
+  LIFE_STAGES = %w[adult juvenile seedling larva pupa egg nymph sprout mature senescent].freeze
+  VIEWS = %w[dorsal lateral ventral anterior posterior top side front back].freeze
+  PARTS = %w[whole leaf flower fruit root bark cap stem branch seed cone frond thallus].freeze
 
   validates :specimen_name, presence: { message: "is required" }
   validates :status, inclusion: { in: STATUSES }
@@ -46,6 +55,47 @@ class SpecimenAsset < ApplicationRecord
   def open_flags_count
     flags.open_flags.count
   end
+
+  # ID status helpers
+  def verified?
+    id_status == "verified"
+  end
+
+  def contested?
+    id_status == "contested"
+  end
+
+  def unverified?
+    id_status == "unverified"
+  end
+
+  # ID status badge class for UI
+  def id_status_badge_class
+    case id_status
+    when "verified" then "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300"
+    when "contested" then "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300"
+    else "bg-stone-100 text-stone-600 dark:bg-stone-700 dark:text-stone-400"
+    end
+  end
+
+  # Trait display helpers
+  def trait_chips
+    chips = []
+    chips << { label: sex, type: "sex" } if sex.present?
+    chips << { label: life_stage, type: "life_stage" } if life_stage.present?
+    chips << { label: view, type: "view" } if view.present?
+    chips << { label: part, type: "part" } if part.present?
+    chips << { label: morph, type: "morph" } if morph.present?
+    chips << { label: region, type: "region" } if region.present?
+    chips
+  end
+
+  # Scopes for filtering
+  scope :by_sex, ->(sex) { where(sex: sex) if sex.present? }
+  scope :by_life_stage, ->(stage) { where(life_stage: stage) if stage.present? }
+  scope :by_view, ->(view) { where(view: view) if view.present? }
+  scope :by_part, ->(part) { where(part: part) if part.present? }
+  scope :by_id_status, ->(status) { where(id_status: status) if status.present? }
 
   private
 
