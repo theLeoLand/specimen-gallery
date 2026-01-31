@@ -10,12 +10,27 @@ module Admin
 
       @specimen_assets = case @filter
       when "approved"
-        SpecimenAsset.where(status: "approved").order(created_at: :desc)
+        SpecimenAsset.where(status: "approved")
       when "all"
-        SpecimenAsset.order(created_at: :desc)
+        SpecimenAsset.all
       else
-        SpecimenAsset.where(status: "pending").order(created_at: :desc)
+        SpecimenAsset.where(status: "pending")
       end
+
+      # Apply search if provided
+      if params[:q].present?
+        search_term = "%#{params[:q]}%"
+        @specimen_assets = @specimen_assets
+          .left_joins(:taxon)
+          .where(
+            "specimen_assets.specimen_name ILIKE :q OR specimen_assets.common_name ILIKE :q OR " \
+            "specimen_assets.morph ILIKE :q OR specimen_assets.region ILIKE :q OR " \
+            "taxa.scientific_name ILIKE :q",
+            q: search_term
+          )
+      end
+
+      @specimen_assets = @specimen_assets.order(created_at: :desc)
 
       @pending_count = SpecimenAsset.where(status: "pending").count
       @approved_count = SpecimenAsset.where(status: "approved").count
@@ -99,6 +114,15 @@ module Admin
       @specimen_asset.attribution_name = params[:specimen_asset][:attribution_name]
       @specimen_asset.attribution_url = params[:specimen_asset][:attribution_url]
       @specimen_asset.needs_review = params[:specimen_asset][:needs_review] == "1"
+
+      # Update trait fields
+      @specimen_asset.sex = params[:specimen_asset][:sex].presence
+      @specimen_asset.life_stage = params[:specimen_asset][:life_stage].presence
+      @specimen_asset.view = params[:specimen_asset][:view].presence
+      @specimen_asset.part = params[:specimen_asset][:part].presence
+      @specimen_asset.morph = params[:specimen_asset][:morph].presence
+      @specimen_asset.region = params[:specimen_asset][:region].presence
+      @specimen_asset.notes = params[:specimen_asset][:notes].presence
 
       # Update status if provided
       if params[:specimen_asset][:status].present? && ALLOWED_STATUSES.include?(params[:specimen_asset][:status])

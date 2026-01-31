@@ -3,7 +3,7 @@
 class Flag < ApplicationRecord
   belongs_to :specimen_asset
 
-  REASONS = %w[wrong_name wrong_license inappropriate duplicate other].freeze
+  REASONS = %w[wrong_name wrong_license inappropriate duplicate low_quality other].freeze
   STATUSES = %w[open resolved dismissed].freeze
 
   validates :reason, presence: true, inclusion: { in: REASONS }
@@ -19,6 +19,7 @@ class Flag < ApplicationRecord
       "wrong_license" => "Incorrect license",
       "inappropriate" => "Inappropriate content",
       "duplicate" => "Duplicate submission",
+      "low_quality" => "Low quality image",
       "other" => "Other issue"
     }[reason] || reason.humanize
   end

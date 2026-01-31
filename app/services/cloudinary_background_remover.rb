@@ -1,11 +1,15 @@
 # app/services/cloudinary_background_remover.rb
 # Uploads an image to Cloudinary and returns a background-removed PNG
+# Automatically upscales small images to ensure they display well in cards
 
 require "open-uri"
 require "tempfile"
 
 class CloudinaryBackgroundRemover
   class RemovalError < StandardError; end
+
+  # Minimum size for the longest edge (upscale if smaller)
+  MIN_DIMENSION = 800
 
   attr_reader :public_id, :transformed_url, :original_url
 
@@ -32,14 +36,26 @@ class CloudinaryBackgroundRemover
   end
 
   # Downloads the transformed image to a Tempfile
+  # Automatically upscales if the image is too small
   # Returns the Tempfile (caller must close/unlink)
   def download_transformed
     raise RemovalError, "No transformed URL available" unless @transformed_url
 
+    # First, get image info to check dimensions
+    dimensions = fetch_image_dimensions
+
+    # Determine if we need to upscale
+    url_to_download = if needs_upscaling?(dimensions)
+      Rails.logger.info("CloudinaryBackgroundRemover: Image too small (#{dimensions[:width]}x#{dimensions[:height]}), upscaling...")
+      upscaled_url(dimensions)
+    else
+      @transformed_url
+    end
+
     tempfile = Tempfile.new([ "bg_removed", ".png" ])
     tempfile.binmode
 
-    URI.open(@transformed_url) do |remote|
+    URI.open(url_to_download) do |remote|
       tempfile.write(remote.read)
     end
 
@@ -101,6 +117,54 @@ class CloudinaryBackgroundRemover
       @uploaded_file.tempfile.path
     else
       @uploaded_file.path
+    end
+  end
+
+  # Fetch image dimensions from Cloudinary
+  def fetch_image_dimensions
+    info = Cloudinary::Api.resource(@public_id)
+    { width: info["width"], height: info["height"] }
+  rescue => e
+    Rails.logger.warn("CloudinaryBackgroundRemover: Could not fetch dimensions: #{e.message}")
+    { width: MIN_DIMENSION, height: MIN_DIMENSION } # Assume OK if can't check
+  end
+
+  # Check if the image needs upscaling
+  def needs_upscaling?(dimensions)
+    max_dim = [ dimensions[:width], dimensions[:height] ].max
+    max_dim < MIN_DIMENSION
+  end
+
+  # Generate a Cloudinary URL with upscaling transformation
+  def upscaled_url(dimensions)
+    # Calculate scale factor to make longest edge = MIN_DIMENSION
+    max_dim = [ dimensions[:width], dimensions[:height] ].max
+    scale_factor = (MIN_DIMENSION.to_f / max_dim).ceil
+
+    # Use Cloudinary's scale transformation
+    # c_scale with w_ or h_ will maintain aspect ratio
+    if dimensions[:width] >= dimensions[:height]
+      Cloudinary::Utils.cloudinary_url(
+        @public_id,
+        format: "png",
+        transformation: [
+          { effect: "background_removal" },
+          { width: MIN_DIMENSION, crop: "scale" },
+          { quality: "auto:best" }
+        ],
+        secure: true
+      )
+    else
+      Cloudinary::Utils.cloudinary_url(
+        @public_id,
+        format: "png",
+        transformation: [
+          { effect: "background_removal" },
+          { height: MIN_DIMENSION, crop: "scale" },
+          { quality: "auto:best" }
+        ],
+        secure: true
+      )
     end
   end
 end

@@ -34,6 +34,33 @@
     <% end %>
   </div>
 
+  <!-- Search bar -->
+  <div class="mb-6">
+    <%= form_with url: admin_specimen_assets_path, method: :get, class: "flex gap-2" do |f| %>
+      <%= hidden_field_tag :filter, @filter %>
+      <div class="relative flex-grow">
+        <%= text_field_tag :q, params[:q],
+          placeholder: "Search by name, region, morph...",
+          class: "w-full pl-10 pr-4 py-2 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-full text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm" %>
+        <div class="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 dark:text-stone-500">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+      </div>
+      <%= f.submit "Search", class: "px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-full hover:bg-amber-700 cursor-pointer" %>
+      <% if params[:q].present? %>
+        <%= link_to "Clear", admin_specimen_assets_path(filter: @filter), class: "px-4 py-2 text-sm text-stone-500 hover:text-amber-600" %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <% if params[:q].present? %>
+    <p class="text-sm text-stone-500 dark:text-stone-400 mb-4">
+      <%= @specimen_assets.count %> result(s) for "<%= params[:q] %>"
+    </p>
+  <% end %>
+
   <% if @specimen_assets.any? %>
     <div class="space-y-4">
       <% @specimen_assets.each do |specimen| %>

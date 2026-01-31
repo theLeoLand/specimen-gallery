@@ -18,12 +18,17 @@ class TaxaController < ApplicationController
       @taxa = @taxa.where(group: @current_group)
     end
 
-    # Search by name (specimen_name, scientific_name, or common_name)
+    # Search by name, morph, or region
     if params[:q].present?
       search_term = "%#{params[:q]}%"
       @taxa = @taxa
         .left_joins(:specimen_assets)
-        .where("taxa.scientific_name ILIKE :q OR specimen_assets.specimen_name ILIKE :q OR specimen_assets.common_name ILIKE :q", q: search_term)
+        .where(
+          "taxa.scientific_name ILIKE :q OR specimen_assets.specimen_name ILIKE :q OR " \
+          "specimen_assets.common_name ILIKE :q OR specimen_assets.morph ILIKE :q OR " \
+          "specimen_assets.region ILIKE :q",
+          q: search_term
+        )
         .distinct
     end
 
