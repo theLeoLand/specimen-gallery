@@ -16,7 +16,7 @@ class Flag < ApplicationRecord
   def self.reason_label(reason)
     {
       "wrong_name" => "Wrong name/identification",
-      "wrong_license" => "Incorrect license",
+      "wrong_license" => "Copyright issue",
       "inappropriate" => "Inappropriate content",
       "duplicate" => "Duplicate submission",
       "low_quality" => "Low quality image",
