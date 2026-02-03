@@ -54,7 +54,6 @@ class SpecimenAssetsController < ApplicationController
 
     @specimen_asset = taxon.specimen_assets.build(specimen_asset_params_without_image)
     @specimen_asset.specimen_name = specimen_name
-    @specimen_asset.status = "pending"
 
     # Determine needs_review based on hybrid verification policy:
     # 1) User explicitly unsure => needs_review = true
@@ -63,6 +62,17 @@ class SpecimenAssetsController < ApplicationController
     @specimen_asset.needs_review = determine_needs_review(
       unsure_id: unsure_id,
       group: taxon.group,
+      scientific_name_provided: scientific_name.present?,
+      is_good_match: is_good_match
+    )
+
+    # Auto-publish logic: if passes all gates, go live immediately as unverified
+    # Otherwise, route to admin review queue
+    @specimen_asset.status = @specimen_asset.needs_review ? "pending" : "approved"
+
+    # Track why it went to review (for user feedback)
+    @review_reason = determine_review_reason(
+      unsure_id: unsure_id,
       scientific_name_provided: scientific_name.present?,
       is_good_match: is_good_match
     )
@@ -111,7 +121,7 @@ class SpecimenAssetsController < ApplicationController
 
     if @specimen_asset.save
       increment_upload_rate_counter
-      redirect_to root_path, notice: submission_notice(is_good_match, bg_removal_failed)
+      redirect_to root_path, notice: submission_notice(@specimen_asset, @review_reason, bg_removal_failed)
     else
       render :new, status: :unprocessable_entity
     end
@@ -429,11 +439,20 @@ class SpecimenAssetsController < ApplicationController
     }
   end
 
-  def submission_notice(is_good_match, bg_removal_failed)
-    base = if is_good_match
-      "Thank you! Your specimen is pending review and will appear once approved."
+  def submission_notice(specimen_asset, review_reason, bg_removal_failed)
+    base = if specimen_asset.status == "approved"
+      "Your specimen is now live! It will appear in the main gallery once the community verifies the identification."
     else
-      "Thank you! Your specimen is pending review."
+      case review_reason
+      when :user_unsure
+        "Your specimen is pending review — you requested ID help."
+      when :name_not_recognized
+        "Your specimen is pending review — the scientific name couldn't be verified."
+      when :no_name_provided
+        "Your specimen is pending review — no scientific name was provided."
+      else
+        "Your specimen is pending review."
+      end
     end
 
     if bg_removal_failed
@@ -441,6 +460,14 @@ class SpecimenAssetsController < ApplicationController
     else
       base
     end
+  end
+
+  # Determine why a specimen went to review (for user feedback)
+  def determine_review_reason(unsure_id:, scientific_name_provided:, is_good_match:)
+    return :user_unsure if unsure_id
+    return :no_name_provided unless scientific_name_provided
+    return :name_not_recognized unless is_good_match
+    nil
   end
 
   # Hybrid verification policy for needs_review flag:

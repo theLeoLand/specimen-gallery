@@ -12,10 +12,46 @@ class Taxon < ApplicationRecord
     joins(:specimen_assets).where(specimen_assets: { status: "approved" }).distinct
   }
 
+  # Scopes for id_status filtering
+  scope :with_verified_assets, -> {
+    joins(:specimen_assets)
+      .where(specimen_assets: { status: "approved", id_status: "verified" })
+      .distinct
+  }
+
+  scope :with_unverified_assets, -> {
+    joins(:specimen_assets)
+      .where(specimen_assets: { status: "approved", id_status: "unverified" })
+      .distinct
+  }
+
+  scope :with_mixed_assets, -> {
+    joins(:specimen_assets)
+      .where(specimen_assets: { status: "approved", id_status: "mixed" })
+      .distinct
+  }
+
+  scope :with_assets_by_id_status, ->(id_status) {
+    case id_status
+    when "verified" then with_verified_assets
+    when "unverified" then with_unverified_assets
+    when "mixed" then with_mixed_assets
+    else with_approved_assets
+    end
+  }
+
   # Order taxa by their most recently approved asset (newest first)
   scope :ordered_by_latest_approved, -> {
     joins(:specimen_assets)
       .where(specimen_assets: { status: "approved" })
+      .group("taxa.id")
+      .order(Arel.sql("MAX(specimen_assets.created_at) DESC"))
+  }
+
+  # Order taxa by their most recently verified asset (newest first) - for homepage
+  scope :ordered_by_latest_verified, -> {
+    joins(:specimen_assets)
+      .where(specimen_assets: { status: "approved", id_status: "verified" })
       .group("taxa.id")
       .order(Arel.sql("MAX(specimen_assets.created_at) DESC"))
   }
@@ -41,6 +77,21 @@ class Taxon < ApplicationRecord
 
   def approved_assets_count
     specimen_assets.where(status: "approved").count
+  end
+
+  # Filter approved assets by id_status
+  def assets_by_id_status(id_status = nil)
+    base = specimen_assets.where(status: "approved")
+    case id_status
+    when "verified" then base.where(id_status: "verified")
+    when "unverified" then base.where(id_status: "unverified")
+    when "mixed" then base.where(id_status: "mixed")
+    else base
+    end.order(created_at: :desc)
+  end
+
+  def verified_assets
+    assets_by_id_status("verified")
   end
 
   # Display name for the group

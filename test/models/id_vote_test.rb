@@ -78,3 +78,4 @@ class IdVoteTest < ActiveSupport::TestCase
     assert_includes duplicate.errors[:voter_fingerprint], "has already voted on this specimen"
   end
 end
+

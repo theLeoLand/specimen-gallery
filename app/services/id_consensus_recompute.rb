@@ -4,9 +4,9 @@ class IdConsensusRecompute
   # Thresholds for consensus determination (easily tweakable)
   THRESHOLDS = {
     verified_min_confirms: 3,        # Minimum confirms for "verified"
-    contested_min_suggests: 2,       # Top suggestion count to trigger "contested"
-    contested_total_suggests: 3,     # Total suggest votes to trigger "contested"
-    contested_margin: 1              # If top_suggested is within this margin of confirms, contested
+    mixed_min_suggests: 2,           # Top suggestion count to trigger "mixed"
+    mixed_total_suggests: 3,         # Total suggest votes to trigger "mixed"
+    mixed_margin: 1                  # If top_suggested is within this margin of confirms, mixed
   }.freeze
 
   def self.call(specimen_asset)
@@ -49,8 +49,8 @@ class IdConsensusRecompute
   def determine_status
     @id_status = if verified?
       "verified"
-    elsif contested?
-      "contested"
+    elsif mixed?
+      "mixed"
     else
       "unverified"
     end
@@ -59,14 +59,14 @@ class IdConsensusRecompute
   def verified?
     # Verified: enough confirms AND suggestions don't challenge it
     @confirm_count >= THRESHOLDS[:verified_min_confirms] &&
-      @top_count < (@confirm_count - THRESHOLDS[:contested_margin])
+      @top_count < (@confirm_count - THRESHOLDS[:mixed_margin])
   end
 
-  def contested?
-    # Contested: significant number of suggests OR close race
-    return true if @top_count >= THRESHOLDS[:contested_min_suggests]
-    return true if @suggest_count >= THRESHOLDS[:contested_total_suggests]
-    return true if @top_count > 0 && (@confirm_count - @top_count).abs <= THRESHOLDS[:contested_margin]
+  def mixed?
+    # Mixed: significant number of suggests OR close race
+    return true if @top_count >= THRESHOLDS[:mixed_min_suggests]
+    return true if @suggest_count >= THRESHOLDS[:mixed_total_suggests]
+    return true if @top_count > 0 && (@confirm_count - @top_count).abs <= THRESHOLDS[:mixed_margin]
     false
   end
 
@@ -80,3 +80,4 @@ class IdConsensusRecompute
     )
   end
 end
+

@@ -1,7 +1,7 @@
 # app/controllers/pages_controller.rb
 class PagesController < ApplicationController
   def home
-    # Get taxa with approved assets, ordered by most recent upload (newest first)
+    # Homepage shows all approved specimens to convey liveliness
     @featured_taxa = Taxon.ordered_by_latest_approved.limit(10)
   end
 

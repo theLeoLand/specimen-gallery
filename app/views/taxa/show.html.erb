@@ -1,5 +1,5 @@
 <div class="w-full">
-  <%= link_to "← Back to Gallery", browse_path, class: "inline-block text-sm text-stone-600 dark:text-stone-400 hover:text-amber-700 dark:hover:text-amber-500 mb-8 transition-colors" %>
+  <%= link_to "← Back to Gallery", browse_path(id_status: @id_status_filter), class: "inline-block text-sm text-stone-600 dark:text-stone-400 hover:text-amber-700 dark:hover:text-amber-500 mb-8 transition-colors" %>
 
   <div class="mb-8">
     <h1 class="font-serif text-4xl text-stone-900 dark:text-stone-100 mb-2 italic">
@@ -15,6 +15,11 @@
     <% end %>
     <p class="text-stone-600 dark:text-stone-400 mt-2">
       <%= pluralize(@specimen_assets.count, "image") %>
+      <% if @id_status_filter.present? && @id_status_filter != "all" %>
+        <span class="text-stone-400">
+          (showing <%= @id_status_filter %> only — <%= link_to "view all", taxon_path(@taxon), class: "text-amber-600 hover:underline" %>)
+        </span>
+      <% end %>
     </p>
   </div>
 
@@ -30,9 +35,12 @@
                   class: "w-full h-full object-contain" %>
               <% end %>
               <% if specimen.verified? %>
-                <!-- Only show Verified badge on cards -->
                 <span class="absolute top-2 right-2 px-2 py-0.5 text-xs font-medium rounded-full <%= specimen.id_status_badge_class %>">
                   Verified
+                </span>
+              <% elsif specimen.mixed? %>
+                <span class="absolute top-2 right-2 px-2 py-0.5 text-xs font-medium rounded-full <%= specimen.id_status_badge_class %>">
+                  Mixed
                 </span>
               <% end %>
             </div>

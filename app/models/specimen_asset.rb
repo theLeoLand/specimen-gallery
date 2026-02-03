@@ -8,7 +8,7 @@ class SpecimenAsset < ApplicationRecord
 
   STATUSES = %w[pending approved rejected].freeze
   LICENSES = %w[CC0 CC_BY].freeze
-  ID_STATUSES = %w[unverified verified contested].freeze
+  ID_STATUSES = %w[unverified verified mixed].freeze
 
   # Trait enums (stored as strings for flexibility)
   SEXES = %w[male female unknown].freeze
@@ -61,8 +61,8 @@ class SpecimenAsset < ApplicationRecord
     id_status == "verified"
   end
 
-  def contested?
-    id_status == "contested"
+  def mixed?
+    id_status == "mixed"
   end
 
   def unverified?
@@ -73,7 +73,7 @@ class SpecimenAsset < ApplicationRecord
   def id_status_badge_class
     case id_status
     when "verified" then "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300"
-    when "contested" then "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300"
+    when "mixed" then "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300"
     else "bg-stone-100 text-stone-600 dark:bg-stone-700 dark:text-stone-400"
     end
   end

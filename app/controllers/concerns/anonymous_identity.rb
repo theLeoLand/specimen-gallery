@@ -44,3 +44,4 @@ module AnonymousIdentity
     "vote_rate:#{voter_ip_hash}"
   end
 end
+

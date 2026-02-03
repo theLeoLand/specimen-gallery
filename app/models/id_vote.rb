@@ -45,3 +45,4 @@ class IdVote < ApplicationRecord
     IdConsensusRecompute.call(specimen_asset)
   end
 end
+
