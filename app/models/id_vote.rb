@@ -46,3 +46,5 @@ class IdVote < ApplicationRecord
   end
 end
 
+
+

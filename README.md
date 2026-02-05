@@ -1,55 +1,115 @@
 # Specimen Gallery
 
-An open-source collection of high-quality, transparent-background specimen images for scientific illustration, education, and creative projects. All images are moderated for quality and freely licensed under CC0 or CC-BY.
+An open-source, community-built collection of high-quality, transparent-background specimen images for scientific illustration, education, and creative projects.
 
-## Run Locally
+🌐 **Live:** [specimen.gallery](https://specimen.gallery)
+
+📖 **[Project Vision](VISION.md)** — Guiding principles and what we're building
+
+## Features
+
+- **Community uploads** with automatic background removal (via Cloudinary)
+- **GBIF integration** for taxonomic name validation
+- **Community ID verification** — confirm or suggest identifications
+- **Clean licensing** — CC0 (public domain) or CC-BY
+- **Quality moderation** — auto-publish for verified names, review queue for uncertain IDs
+- **Trait tagging** — sex, life stage, view angle, body part
+
+## Tech Stack
+
+- **Framework:** Ruby on Rails 8.1
+- **Database:** PostgreSQL
+- **Styling:** Tailwind CSS
+- **Frontend:** Hotwire (Turbo + Stimulus)
+- **File Storage:** Active Storage (S3 in production)
+- **Background Removal:** Cloudinary AI
+- **Taxonomy:** GBIF Species API
+- **Hosting:** Fly.io
+
+## Local Development
+
+### Prerequisites
+
+- Ruby 3.3+
+- PostgreSQL (or SQLite for simple local dev)
+- Node.js (for Tailwind CSS builds)
+
+### Setup
 
 ```bash
+# Clone the repo
+git clone https://github.com/chispainnov/specimen-gallery.git
+cd specimen-gallery
+
 # Install dependencies
 bundle install
 
 # Set up database
 bin/rails db:setup
 
-# Set admin password
-export ADMIN_PASSWORD="your-secret-password"
+# Copy environment template
+cp .env.example .env
+# Edit .env with your values (see below)
 
 # Start development server
 bin/dev
 ```
 
-Visit `http://localhost:3000`. Admin queue at `/admin/specimen_assets`.
+Visit `http://localhost:3000`
 
-## Contribution Rules
+### Environment Variables
 
-**Image requirements:**
-- Transparent background (alpha channel required)
-- Single specimen per image
-- Minimum 512×512 pixels
-- PNG or WebP format only
-- No heavy filters, watermarks, or composites
+See `.env.example` for all options. At minimum for local dev:
 
-**Quality standards:**
-- Clean specimen isolation
-- Accurate colors (minimal post-processing)
-- Sharp focus on subject
-- No visible artifacts or halos
+```bash
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=your_password
+ADMIN_ROUTE_SECRET=your_secret
+```
+
+For background removal, you'll need Cloudinary credentials (free tier available).
+
+### Admin Access
+
+Visit `/your_route_secret/admin/specimen_assets` to access the moderation queue.
+
+## Image Requirements
+
+- **Transparent background** (PNG or WebP with alpha channel)
+- **Single specimen** per image
+- **Minimum 512×512 pixels**
+- **Clean isolation** — no artifacts, halos, or background remnants
+- **Accurate colors** — minimal post-processing
 
 ## Licensing
 
-- **CC0 (preferred):** Public domain. No attribution required.
-- **CC-BY (allowed):** Attribution required. Must provide name and URL.
+Contributors choose their license:
 
-By uploading, you confirm you hold rights to the image and agree to release it under your selected license.
+- **CC0** — Public domain, no attribution required
+- **CC-BY** — Free to use, attribution required
 
-## Moderation
+By uploading, contributors confirm they hold rights to the image.
 
-All uploads enter a pending queue and are reviewed before appearing in the public gallery. Submissions may be rejected for:
-- Not meeting image requirements
-- Incorrect or missing metadata
-- Copyright concerns
-- Low quality or duplicate content
+## Contributing
 
-## Format Specification
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-See [docs/format-v0.1.md](docs/format-v0.1.md) for the Specimen Gallery Format specification.
+- **Bug reports:** Open an issue with steps to reproduce
+- **Features:** Open an issue first to discuss
+- **Code:** Small PRs preferred, follow Rails conventions
+
+## Security
+
+Found a vulnerability? See [SECURITY.md](SECURITY.md) for responsible disclosure.
+
+## License
+
+This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
+
+Note: The *code* is MIT licensed. *Specimen images* in the gallery are licensed individually by their contributors (CC0 or CC-BY).
+
+## Acknowledgments
+
+- [GBIF](https://www.gbif.org/) for taxonomic data
+- [Cloudinary](https://cloudinary.com/) for image processing
+- All contributors who share their specimen images
