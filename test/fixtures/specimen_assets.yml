@@ -1,0 +1,6 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+# Note: These fixtures are minimal and don't include attached images.
+# Most tests should create their own test data with proper attachments.
+
+# Empty fixtures file to avoid fixture loading errors.
+# Tests that need specimen_assets should create them in setup.

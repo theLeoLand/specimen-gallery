@@ -1,0 +1,245 @@
+<div class="w-full max-w-xl mx-auto pt-4 md:pt-0">
+  <h1 class="font-serif text-4xl text-stone-900 dark:text-stone-100 mb-2 text-center">Upload Specimen</h1>
+  <p class="text-stone-600 dark:text-stone-400 text-center mb-8">Contribute to our open-source specimen collection.</p>
+
+  <% if @specimen_asset.errors.any? %>
+    <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+      <h3 class="text-red-800 dark:text-red-300 font-semibold mb-2">Please fix the following errors:</h3>
+      <ul class="list-disc list-inside text-sm text-red-700 dark:text-red-400 space-y-1">
+        <% @specimen_asset.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= form_with model: @specimen_asset, class: "space-y-6", data: { controller: "license image-upload" } do |f| %>
+    <!-- Specimen Name (REQUIRED) -->
+    <div>
+      <%= f.label :specimen_name, "Specimen name", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+      <%= f.text_field :specimen_name,
+        placeholder: "e.g., Bismuth / Quartz / Apis mellifera",
+        required: true,
+        class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
+      <p class="mt-1 text-xs text-stone-500 dark:text-stone-400">For living organisms, you can enter a Latin name (optional).</p>
+    </div>
+
+    <!-- Scientific/Taxonomic Name (OPTIONAL) with GBIF autocomplete -->
+    <div data-controller="taxon-autocomplete unknown-species" data-taxon-autocomplete-url-value="<%= suggest_taxa_path %>">
+      <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">Scientific / taxonomic name <span class="text-stone-400 dark:text-stone-500 font-normal">(optional)</span></label>
+      <div class="relative">
+        <%= text_field_tag "specimen_asset[scientific_name]",
+          params.dig(:specimen_asset, :scientific_name),
+          id: "scientific_name_field",
+          placeholder: "e.g., Apis mellifera",
+          autocomplete: "off",
+          data: {
+            taxon_autocomplete_target: "input",
+            unknown_species_target: "taxonomyField",
+            action: "input->taxon-autocomplete#onInput keydown->taxon-autocomplete#onKeydown blur->taxon-autocomplete#onBlur"
+          },
+          class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:bg-stone-100 dark:disabled:bg-stone-700 disabled:text-stone-400" %>
+
+        <div data-taxon-autocomplete-target="results"
+             class="hidden absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl shadow-lg max-h-64 overflow-y-auto">
+        </div>
+      </div>
+      <p class="mt-1 text-xs text-stone-500 dark:text-stone-400">Start typing to see suggestions from GBIF taxonomy.</p>
+      
+      <label class="flex items-center gap-2 mt-3 cursor-pointer">
+        <%= check_box_tag "specimen_asset[unsure_id]", "1", false,
+          id: "unsure_id_checkbox",
+          data: { 
+            unknown_species_target: "checkbox",
+            action: "change->unknown-species#toggle" 
+          },
+          class: "w-4 h-4 text-amber-600 border-stone-300 dark:border-stone-600 rounded focus:ring-amber-500" %>
+        <span class="text-sm text-stone-600 dark:text-stone-400">I'm not sure (submit for ID help)</span>
+      </label>
+    </div>
+
+    <!-- Category selector -->
+    <div>
+      <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">Category</label>
+      <%= select_tag "specimen_asset[group]",
+        options_for_select(TaxonGroupResolver.all_with_metadata.map { |g| ["#{g[:icon]} #{g[:name]}", g[:value]] }),
+        include_blank: "Select a category...",
+        class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
+      <p class="mt-1 text-xs text-stone-500 dark:text-stone-400">What type of specimen is this? Auto-detected if GBIF match found.</p>
+    </div>
+
+    <div>
+      <%= f.label :common_name, class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+      <%= f.text_field :common_name,
+        placeholder: "e.g., Honey Bee (optional)",
+        class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
+    </div>
+
+    <!-- Specimen Details (collapsible) -->
+    <details class="group">
+      <summary class="cursor-pointer text-sm font-medium text-amber-600 dark:text-amber-500 hover:underline flex items-center gap-1">
+        <svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+        Add specimen details (sex, life stage, view, location…)
+      </summary>
+
+      <div class="mt-4 space-y-4 p-4 bg-stone-50 dark:bg-stone-800/50 rounded-xl border border-stone-200 dark:border-stone-700">
+        <!-- Row 1: Sex + Life Stage -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <%= f.label :sex, class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+            <%= f.select :sex,
+              options_for_select([["Not specified", ""]] + SpecimenAsset::SEXES.map { |s| [s.titleize, s] }),
+              {},
+              class: "w-full px-3 py-2 bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg text-stone-800 dark:text-stone-200 text-sm" %>
+          </div>
+          <div>
+            <%= f.label :life_stage, "Life stage", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+            <%= f.select :life_stage,
+              options_for_select([["Not specified", ""]] + SpecimenAsset::LIFE_STAGES.map { |s| [s.titleize, s] }),
+              {},
+              class: "w-full px-3 py-2 bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg text-stone-800 dark:text-stone-200 text-sm" %>
+          </div>
+        </div>
+
+        <!-- Row 2: View + Part -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <%= f.label :view, "View angle", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+            <%= f.select :view,
+              options_for_select([["Not specified", ""]] + SpecimenAsset::VIEWS.map { |s| [s.titleize, s] }),
+              {},
+              class: "w-full px-3 py-2 bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg text-stone-800 dark:text-stone-200 text-sm" %>
+          </div>
+          <div>
+            <%= f.label :part, "Part shown", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+            <%= f.select :part,
+              options_for_select([["Not specified", ""]] + SpecimenAsset::PARTS.map { |s| [s.titleize, s] }),
+              {},
+              class: "w-full px-3 py-2 bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg text-stone-800 dark:text-stone-200 text-sm" %>
+          </div>
+        </div>
+
+        <!-- Morph (for color variants, seasonal forms, etc.) -->
+        <div>
+          <%= f.label :morph, "Morph / variant", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+          <%= f.text_field :morph,
+            placeholder: "e.g., winter plumage, albino, blue form",
+            class: "w-full px-3 py-2 bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg text-stone-800 dark:text-stone-200 placeholder:text-stone-400 text-sm" %>
+        </div>
+
+        <!-- Region/Location -->
+        <div>
+          <%= f.label :region, "Location observed", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+          <%= f.text_field :region,
+            placeholder: "e.g., California, USA / Kent, England / Queensland, Australia",
+            class: "w-full px-3 py-2 bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg text-stone-800 dark:text-stone-200 placeholder:text-stone-400 text-sm" %>
+          <p class="mt-1 text-xs text-stone-500 dark:text-stone-400">Where was this specimen photographed?</p>
+        </div>
+
+        <!-- Notes -->
+        <div>
+          <%= f.label :notes, class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+          <%= f.text_area :notes,
+            placeholder: "Any additional context about this specimen...",
+            rows: 2,
+            class: "w-full px-3 py-2 bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg text-stone-800 dark:text-stone-200 placeholder:text-stone-400 text-sm resize-none" %>
+        </div>
+      </div>
+    </details>
+
+    <div>
+      <%= f.label :license, class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+      <%= f.select :license,
+        [["CC0 (Public Domain)", "CC0"], ["CC-BY (Attribution Required)", "CC_BY"]],
+        {},
+        class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent",
+        data: { action: "change->license#toggle", license_target: "select" } %>
+    </div>
+
+    <div data-license-target="attribution" class="hidden space-y-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
+      <p class="text-sm text-amber-800 dark:text-amber-300 mb-4">CC-BY requires attribution information:</p>
+
+      <div>
+        <%= f.label :attribution_name, "Your Name / Organization", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+        <%= f.text_field :attribution_name,
+          placeholder: "e.g., Jane Doe",
+          class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
+      </div>
+
+      <div>
+        <%= f.label :attribution_url, "Attribution URL", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+        <%= f.url_field :attribution_url,
+          placeholder: "https://...",
+          class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
+      </div>
+    </div>
+
+    <div>
+      <%= f.label :image, class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+      <div class="relative">
+        <%= f.file_field :image,
+          accept: "image/png,image/webp,image/jpeg,image/heic",
+          required: true,
+          data: { 
+            image_upload_target: "fileInput",
+            action: "change->image-upload#fileSelected"
+          },
+          class: "block w-full text-sm text-stone-600 dark:text-stone-400 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-amber-100 file:text-amber-800 dark:file:bg-amber-800 dark:file:text-amber-100 hover:file:bg-amber-200 dark:hover:file:bg-amber-700 file:cursor-pointer cursor-pointer" %>
+      </div>
+
+      <!-- File info display -->
+      <div data-image-upload-target="fileInfo" class="hidden mt-3 p-3 bg-stone-100 dark:bg-stone-800 rounded-lg">
+        <div class="flex items-center justify-between text-sm">
+          <span data-image-upload-target="fileName" class="text-stone-700 dark:text-stone-300 truncate max-w-[200px]"></span>
+          <span data-image-upload-target="fileSize" class="text-stone-500 dark:text-stone-400 ml-2"></span>
+        </div>
+      </div>
+
+      <!-- Compression status -->
+      <div data-image-upload-target="status" class="hidden mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+        <div class="flex items-center gap-2 text-sm text-blue-800 dark:text-blue-300">
+          <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span data-image-upload-target="statusText">Optimizing image…</span>
+        </div>
+      </div>
+
+      <!-- Warning/success messages -->
+      <div data-image-upload-target="warning" class="hidden mt-3 p-3 border rounded-lg text-sm">
+        <span data-image-upload-target="warningText"></span>
+      </div>
+
+      <p class="mt-2 text-xs text-stone-500 dark:text-stone-400">PNG or WebP with transparent background, or use background removal below. Large files are automatically optimized.</p>
+    </div>
+
+    <div class="p-4 bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl">
+      <label class="flex items-start gap-3 cursor-pointer">
+        <%= check_box_tag "specimen_asset[remove_background]", "1", false,
+          data: { 
+            image_upload_target: "removeBackground",
+            action: "change->image-upload#bgToggleChanged"
+          },
+          class: "mt-1 w-4 h-4 text-amber-600 border-stone-300 dark:border-stone-600 rounded focus:ring-amber-500" %>
+        <div>
+          <span class="text-sm font-medium text-stone-700 dark:text-stone-300">Remove background automatically</span>
+          <span class="ml-1 text-xs px-1.5 py-0.5 bg-amber-100 dark:bg-amber-800 text-amber-700 dark:text-amber-200 rounded">beta</span>
+          <p class="text-xs text-stone-500 dark:text-stone-400 mt-1">Upload any photo (JPG, PNG, HEIC, WebP) — we'll cut it out into a transparent PNG.</p>
+        </div>
+      </label>
+    </div>
+
+    <div class="pt-4">
+      <%= f.submit "Submit Specimen",
+        data: { image_upload_target: "submitButton" },
+        class: "w-full px-6 py-4 bg-amber-600 text-white font-medium rounded-full hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 dark:focus:ring-offset-stone-900 transition-colors cursor-pointer" %>
+    </div>
+
+    <p class="text-xs text-stone-500 dark:text-stone-400 text-center">
+      Submissions are reviewed before appearing in the gallery.
+    </p>
+  <% end %>
+</div>

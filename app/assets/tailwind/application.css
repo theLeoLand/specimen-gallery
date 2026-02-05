@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+/* Enable class-based dark mode */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
+}

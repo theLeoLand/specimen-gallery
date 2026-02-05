@@ -1,0 +1,268 @@
+<div class="w-full max-w-2xl mx-auto pt-4 md:pt-0">
+  <div class="mb-6">
+    <%= link_to "← Back to queue", admin_specimen_assets_path, class: "text-sm text-stone-500 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-500" %>
+  </div>
+
+  <h1 class="font-serif text-3xl text-stone-900 dark:text-stone-100 mb-2">Edit Specimen</h1>
+  <p class="text-stone-600 dark:text-stone-400 mb-8">Review and update specimen details before approval.</p>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <!-- Image preview -->
+    <div class="md:col-span-1">
+      <div class="sticky top-24">
+        <div class="aspect-square bg-gradient-to-br from-stone-100 to-stone-200 dark:from-stone-700 dark:to-stone-800 rounded-2xl overflow-hidden mb-4">
+          <% if @specimen_asset.image.attached? %>
+            <%= image_tag @specimen_asset.image,
+              alt: @specimen_asset.display_name,
+              class: "w-full h-full object-contain p-4" %>
+          <% end %>
+        </div>
+        
+        <div class="space-y-2 text-sm text-stone-500 dark:text-stone-400">
+          <p>Submitted <%= time_ago_in_words(@specimen_asset.created_at) %> ago</p>
+          <% if @specimen_asset.bg_removed? %>
+            <p class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-violet-500"></span>
+              Background removed via Cloudinary
+            </p>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit form -->
+    <div class="md:col-span-2">
+      <% if @specimen_asset.errors.any? %>
+        <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+          <h3 class="text-red-800 dark:text-red-300 font-semibold mb-2">Please fix the following errors:</h3>
+          <ul class="list-disc list-inside text-sm text-red-700 dark:text-red-400 space-y-1">
+            <% @specimen_asset.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <%= form_with model: [:admin, @specimen_asset], class: "space-y-6", data: { controller: "taxon-autocomplete license", taxon_autocomplete_url_value: suggest_taxa_path } do |f| %>
+        <!-- Specimen name (required display name) -->
+        <div>
+          <%= f.label :specimen_name, "Specimen name", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+          <%= f.text_field :specimen_name,
+            placeholder: "e.g., Bismuth / Quartz / Apis mellifera",
+            required: true,
+            class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
+          <p class="mt-1 text-xs text-stone-500 dark:text-stone-400">
+            Primary display name for this specimen.
+          </p>
+        </div>
+
+        <!-- Scientific/taxonomic name with autocomplete (optional) -->
+        <div>
+          <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">Scientific / taxonomic name <span class="text-stone-400 dark:text-stone-500 font-normal">(optional)</span></label>
+          <div class="relative">
+            <%= text_field_tag "specimen_asset[scientific_name]",
+              @specimen_asset.taxon&.scientific_name,
+              placeholder: "e.g., Apis mellifera",
+              autocomplete: "off",
+              data: {
+                taxon_autocomplete_target: "input",
+                action: "input->taxon-autocomplete#onInput keydown->taxon-autocomplete#onKeydown blur->taxon-autocomplete#onBlur"
+              },
+              class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
+            
+            <div data-taxon-autocomplete-target="results"
+                 class="hidden absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl shadow-lg max-h-64 overflow-y-auto">
+            </div>
+          </div>
+          <p class="mt-1 text-xs text-stone-500 dark:text-stone-400">
+            Start typing to search GBIF taxonomy. Changing this will update the taxon association.
+          </p>
+          
+          <% if @specimen_asset.taxon&.gbif_key.present? %>
+            <p class="mt-2 text-xs text-emerald-600 dark:text-emerald-400">
+              ✓ Currently matched: <%= @specimen_asset.taxon.gbif_canonical_name %> 
+              (<%= @specimen_asset.taxon.gbif_rank&.downcase %>)
+            </p>
+          <% elsif @specimen_asset.taxon&.scientific_name.present? && @specimen_asset.taxon.scientific_name != @specimen_asset.specimen_name %>
+            <p class="mt-2 text-xs text-amber-600 dark:text-amber-400">
+              ⚠ Not verified in GBIF
+            </p>
+          <% end %>
+        </div>
+
+        <!-- Specimen Type (Group) -->
+        <div>
+          <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">Specimen Type</label>
+          <%= select_tag "specimen_asset[taxon_group]",
+            options_for_select(
+              TaxonGroupResolver.all_with_metadata.map { |g| ["#{g[:icon]} #{g[:name]}", g[:value]] },
+              @specimen_asset.taxon&.group
+            ),
+            class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
+          <p class="mt-1 text-xs text-stone-500 dark:text-stone-400">
+            <% if @specimen_asset.taxon&.gbif_key.present? %>
+              Auto-detected from GBIF. Override if incorrect.
+            <% else %>
+              Manually assign a specimen type.
+            <% end %>
+          </p>
+        </div>
+
+        <!-- Common name -->
+        <div>
+          <%= f.label :common_name, class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+          <%= f.text_field :common_name,
+            placeholder: "e.g., Great White Shark",
+            class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
+        </div>
+
+        <!-- Specimen Traits -->
+        <details class="group" <%= @specimen_asset.sex.present? || @specimen_asset.life_stage.present? || @specimen_asset.region.present? ? "open" : "" %>>
+          <summary class="cursor-pointer text-sm font-medium text-amber-600 dark:text-amber-500 hover:underline flex items-center gap-1">
+            <svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+            Specimen traits (sex, life stage, view, location…)
+          </summary>
+
+          <div class="mt-4 space-y-4 p-4 bg-stone-50 dark:bg-stone-800/50 rounded-xl border border-stone-200 dark:border-stone-700">
+            <!-- Row 1: Sex + Life Stage -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <%= f.label :sex, class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+                <%= f.select :sex,
+                  options_for_select([["Not specified", ""]] + SpecimenAsset::SEXES.map { |s| [s.titleize, s] }, @specimen_asset.sex),
+                  {},
+                  class: "w-full px-3 py-2 bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg text-stone-800 dark:text-stone-200 text-sm" %>
+              </div>
+              <div>
+                <%= f.label :life_stage, "Life stage", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+                <%= f.select :life_stage,
+                  options_for_select([["Not specified", ""]] + SpecimenAsset::LIFE_STAGES.map { |s| [s.titleize, s] }, @specimen_asset.life_stage),
+                  {},
+                  class: "w-full px-3 py-2 bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg text-stone-800 dark:text-stone-200 text-sm" %>
+              </div>
+            </div>
+
+            <!-- Row 2: View + Part -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <%= f.label :view, "View angle", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+                <%= f.select :view,
+                  options_for_select([["Not specified", ""]] + SpecimenAsset::VIEWS.map { |s| [s.titleize, s] }, @specimen_asset.view),
+                  {},
+                  class: "w-full px-3 py-2 bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg text-stone-800 dark:text-stone-200 text-sm" %>
+              </div>
+              <div>
+                <%= f.label :part, "Part shown", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+                <%= f.select :part,
+                  options_for_select([["Not specified", ""]] + SpecimenAsset::PARTS.map { |s| [s.titleize, s] }, @specimen_asset.part),
+                  {},
+                  class: "w-full px-3 py-2 bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg text-stone-800 dark:text-stone-200 text-sm" %>
+              </div>
+            </div>
+
+            <!-- Morph -->
+            <div>
+              <%= f.label :morph, "Morph / variant", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+              <%= f.text_field :morph,
+                placeholder: "e.g., winter plumage, albino, blue form",
+                class: "w-full px-3 py-2 bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg text-stone-800 dark:text-stone-200 placeholder:text-stone-400 text-sm" %>
+            </div>
+
+            <!-- Region -->
+            <div>
+              <%= f.label :region, "Location observed", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+              <%= f.text_field :region,
+                placeholder: "e.g., California, USA",
+                class: "w-full px-3 py-2 bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg text-stone-800 dark:text-stone-200 placeholder:text-stone-400 text-sm" %>
+            </div>
+
+            <!-- Notes -->
+            <div>
+              <%= f.label :notes, class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+              <%= f.text_area :notes,
+                placeholder: "Any additional context about this specimen...",
+                rows: 2,
+                class: "w-full px-3 py-2 bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg text-stone-800 dark:text-stone-200 placeholder:text-stone-400 text-sm resize-none" %>
+            </div>
+          </div>
+        </details>
+
+        <!-- License -->
+        <div>
+          <%= f.label :license, class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+          <%= f.select :license,
+            [["CC0 (Public Domain)", "CC0"], ["CC-BY (Attribution Required)", "CC_BY"]],
+            {},
+            class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent",
+            data: { action: "change->license#toggle", license_target: "select" } %>
+        </div>
+
+        <!-- Attribution (for CC-BY) -->
+        <div data-license-target="attribution" class="<%= 'hidden' unless @specimen_asset.license == 'CC_BY' %> space-y-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
+          <p class="text-sm text-amber-800 dark:text-amber-300">CC-BY requires attribution information:</p>
+          
+          <div>
+            <%= f.label :attribution_name, "Your Name / Organization", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+            <%= f.text_field :attribution_name,
+              placeholder: "e.g., Jane Doe",
+              class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
+          </div>
+
+          <div>
+            <%= f.label :attribution_url, "Attribution URL", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+            <%= f.url_field :attribution_url,
+              placeholder: "https://...",
+              class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
+          </div>
+        </div>
+
+        <!-- Status -->
+        <div>
+          <%= f.label :status, class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+          <%= f.select :status,
+            [["Pending", "pending"], ["Approved", "approved"], ["Rejected", "rejected"]],
+            {},
+            class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
+        </div>
+
+        <!-- Needs review flag -->
+        <div class="flex items-center gap-3">
+          <%= f.check_box :needs_review,
+            class: "w-4 h-4 text-amber-600 border-stone-300 dark:border-stone-600 rounded focus:ring-amber-500" %>
+          <%= f.label :needs_review, "Flag for additional review", class: "text-sm text-stone-700 dark:text-stone-300" %>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center gap-4 pt-4 border-t border-stone-200 dark:border-stone-700">
+          <%= f.submit "Save Changes",
+            class: "px-6 py-3 bg-amber-600 text-white font-medium rounded-full hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 dark:focus:ring-offset-stone-900 transition-colors cursor-pointer" %>
+          
+          <%= link_to "Cancel", admin_specimen_assets_path,
+            class: "px-6 py-3 text-stone-600 dark:text-stone-400 font-medium hover:text-stone-800 dark:hover:text-stone-200 transition-colors" %>
+        </div>
+      <% end %>
+
+      <!-- Quick actions -->
+      <div class="mt-8 pt-6 border-t border-stone-200 dark:border-stone-700">
+        <h3 class="text-sm font-medium text-stone-700 dark:text-stone-300 mb-4">Quick Actions</h3>
+        <div class="flex items-center gap-3">
+          <%= button_to admin_specimen_asset_path(@specimen_asset, status: "approved"),
+            method: :patch,
+            class: "px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-full hover:bg-emerald-700 transition-colors" do %>
+            ✓ Approve
+          <% end %>
+
+          <%= button_to admin_specimen_asset_path(@specimen_asset),
+            method: :delete,
+            data: { turbo_confirm: "Reject and delete this specimen?" },
+            class: "px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-sm font-medium rounded-full hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors" do %>
+            ✗ Reject & Delete
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

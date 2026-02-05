@@ -1,0 +1,176 @@
+<div class="w-full">
+  <div class="text-center mb-8 pt-4 md:pt-0">
+    <h1 class="font-serif text-5xl text-stone-900 dark:text-stone-100 mb-4">Browse Collection</h1>
+    <p class="text-lg text-stone-600 dark:text-stone-400 max-w-xl mx-auto">
+      Search and explore all specimens in the gallery.
+    </p>
+  </div>
+
+  <!-- Search and Filters -->
+  <div class="max-w-3xl mx-auto mb-8">
+    <%= form_with url: browse_path, method: :get, class: "space-y-4" do |f| %>
+      <!-- Search bar -->
+      <div class="relative">
+        <%= text_field_tag :q, params[:q],
+          placeholder: "Search by name...",
+          class: "w-full pl-12 pr-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-full text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-shadow" %>
+        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 dark:text-stone-500">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Filter dropdowns -->
+      <%
+        has_id_status_filter = @id_status_filter.present? && @id_status_filter != "all"
+        has_other_filters = @filters&.values&.any?(&:present?) || @current_group.present?
+        active_filter_count = [@current_group, @filters&.dig(:sex), @filters&.dig(:life_stage), @filters&.dig(:view), @filters&.dig(:part)].compact.reject(&:blank?).count
+        active_filter_count += 1 if has_id_status_filter
+      %>
+      <details class="group" <%= has_other_filters || has_id_status_filter ? "open" : "" %>>
+        <summary class="cursor-pointer flex items-center justify-center gap-2 text-sm text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-500">
+          <svg class="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+          <span>Filters</span>
+          <% if active_filter_count > 0 %>
+            <span class="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-xs rounded-full"><%= active_filter_count %></span>
+          <% end %>
+        </summary>
+
+        <div class="mt-4 p-4 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl">
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
+            <!-- Category -->
+            <div>
+              <label class="block text-xs text-stone-500 dark:text-stone-400 mb-1">Category</label>
+              <%= select_tag :group,
+                options_for_select(
+                  [["All categories", ""]] + @groups.map { |g| ["#{g[:icon]} #{g[:name]}", g[:value]] },
+                  @current_group
+                ),
+                class: "w-full px-2 py-1.5 text-sm bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg" %>
+            </div>
+
+            <!-- ID Status -->
+            <div>
+              <label class="block text-xs text-stone-500 dark:text-stone-400 mb-1">ID Status</label>
+              <%= select_tag :id_status,
+                options_for_select([
+                  ["All", "all"],
+                  ["✓ Verified", "verified"],
+                  ["○ Unverified", "unverified"],
+                  ["~ Mixed", "mixed"]
+                ], @id_status_filter),
+                class: "w-full px-2 py-1.5 text-sm bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg" %>
+            </div>
+
+            <!-- Sex -->
+            <div>
+              <label class="block text-xs text-stone-500 dark:text-stone-400 mb-1">Sex</label>
+              <%= select_tag :sex,
+                options_for_select([["All", ""]] + SpecimenAsset::SEXES.map { |s| [s.titleize, s] }, @filters&.dig(:sex)),
+                class: "w-full px-2 py-1.5 text-sm bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg" %>
+            </div>
+
+            <!-- Life Stage -->
+            <div>
+              <label class="block text-xs text-stone-500 dark:text-stone-400 mb-1">Life Stage</label>
+              <%= select_tag :life_stage,
+                options_for_select([["All", ""]] + SpecimenAsset::LIFE_STAGES.map { |s| [s.titleize, s] }, @filters&.dig(:life_stage)),
+                class: "w-full px-2 py-1.5 text-sm bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg" %>
+            </div>
+
+            <!-- View -->
+            <div>
+              <label class="block text-xs text-stone-500 dark:text-stone-400 mb-1">View</label>
+              <%= select_tag :view,
+                options_for_select([["All", ""]] + SpecimenAsset::VIEWS.map { |s| [s.titleize, s] }, @filters&.dig(:view)),
+                class: "w-full px-2 py-1.5 text-sm bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg" %>
+            </div>
+
+            <!-- Part -->
+            <div>
+              <label class="block text-xs text-stone-500 dark:text-stone-400 mb-1">Part</label>
+              <%= select_tag :part,
+                options_for_select([["All", ""]] + SpecimenAsset::PARTS.map { |s| [s.titleize, s] }, @filters&.dig(:part)),
+                class: "w-full px-2 py-1.5 text-sm bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg" %>
+            </div>
+
+            <!-- Apply button -->
+            <div class="flex items-end">
+              <%= f.submit "Apply",
+                class: "w-full px-3 py-1.5 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 cursor-pointer" %>
+            </div>
+          </div>
+
+          <% if @current_group.present? || @filters&.values&.any?(&:present?) || has_id_status_filter %>
+            <div class="mt-3 text-center">
+              <%= link_to "Clear all filters", browse_path, class: "text-xs text-stone-500 dark:text-stone-400 hover:text-amber-600" %>
+            </div>
+          <% end %>
+        </div>
+      </details>
+    <% end %>
+  </div>
+
+  <!-- Results info -->
+  <% if @current_group.present? || params[:q].present? || @filters&.values&.any?(&:present?) %>
+    <div class="text-center mb-6">
+      <p class="text-sm text-stone-500 dark:text-stone-400">
+        <%= @taxa.count %> <%= "result".pluralize(@taxa.count) %>
+        <% if params[:q].present? %>
+          for "<%= params[:q] %>"
+        <% end %>
+      </p>
+    </div>
+  <% end %>
+
+  <% if @taxa.any? %>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        <% @taxa.each do |taxon| %>
+        <% specimen = taxon.assets_by_id_status(@id_status_filter == "all" ? nil : @id_status_filter).first %>
+        <%= link_to taxon_path(taxon, id_status: @id_status_filter), class: "group block" do %>
+          <div class="aspect-square bg-gradient-to-br from-stone-100 to-stone-200 dark:from-stone-800 dark:to-stone-700 rounded-2xl overflow-hidden mb-3 ring-1 ring-stone-200 dark:ring-stone-700 group-hover:ring-amber-400 group-hover:shadow-lg transition-all duration-200 relative">
+            <% if specimen&.image&.attached? %>
+              <%= image_tag specimen.image,
+                alt: specimen&.display_name,
+                class: "w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300" %>
+            <% end %>
+            <% if specimen&.verified? %>
+              <span class="absolute top-2 right-2 px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300">
+                Verified
+              </span>
+            <% end %>
+          </div>
+          <p class="text-sm font-medium text-stone-700 dark:text-stone-300 group-hover:text-amber-700 dark:group-hover:text-amber-500 transition-colors truncate italic">
+            <%= taxon.scientific_name %>
+          </p>
+          <% asset_count = taxon.assets_by_id_status(@id_status_filter == "all" ? nil : @id_status_filter).count %>
+          <% if asset_count > 1 %>
+            <p class="text-xs text-stone-500 dark:text-stone-400"><%= asset_count %> images</p>
+          <% end %>
+        <% end %>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="text-center py-16">
+      <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-stone-100 dark:bg-stone-700 flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-stone-400 dark:text-stone-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+      <p class="text-lg text-stone-600 dark:text-stone-400 mb-2">No specimens found</p>
+      <% if params[:q].present? || @current_group.present? || @filters&.values&.any?(&:present?) || (@id_status_filter.present? && @id_status_filter != "all") %>
+        <p class="text-sm text-stone-500 dark:text-stone-400">
+          Try a different search term or 
+          <%= link_to "clear filters", browse_path, class: "text-amber-600 dark:text-amber-500 hover:underline" %>
+        </p>
+      <% else %>
+        <p class="text-sm text-stone-500 dark:text-stone-400">
+          Be the first to <%= link_to "upload a specimen", new_specimen_asset_path, class: "text-amber-600 dark:text-amber-500 hover:underline" %>!
+        </p>
+      <% end %>
+    </div>
+  <% end %>
+</div>
