@@ -108,5 +108,11 @@
         </div>
       </div>
     </footer>
+
+    <%# GoatCounter analytics (privacy-friendly, no cookies) %>
+    <% if Rails.env.production? %>
+      <script data-goatcounter="https://<%= ENV.fetch('GOATCOUNTER_SITE', 'specimen-gallery') %>.goatcounter.com/count"
+              async src="//gc.zgo.at/count.js"></script>
+    <% end %>
   </body>
 </html>
