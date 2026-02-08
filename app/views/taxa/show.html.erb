@@ -32,6 +32,7 @@
               <% if specimen.image.attached? %>
                 <%= image_tag specimen.image,
                   alt: @taxon.scientific_name,
+                  loading: "lazy",
                   class: "w-full h-full object-contain" %>
               <% end %>
               <% if specimen.verified? %>
