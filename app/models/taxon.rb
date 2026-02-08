@@ -21,13 +21,8 @@ class Taxon < ApplicationRecord
 
   scope :with_unverified_assets, -> {
     joins(:specimen_assets)
-      .where(specimen_assets: { status: "approved", id_status: "unverified" })
-      .distinct
-  }
-
-  scope :with_mixed_assets, -> {
-    joins(:specimen_assets)
-      .where(specimen_assets: { status: "approved", id_status: "mixed" })
+      .where(specimen_assets: { status: "approved" })
+      .where.not(specimen_assets: { id_status: "verified" })
       .distinct
   }
 
@@ -35,7 +30,6 @@ class Taxon < ApplicationRecord
     case id_status
     when "verified" then with_verified_assets
     when "unverified" then with_unverified_assets
-    when "mixed" then with_mixed_assets
     else with_approved_assets
     end
   }
@@ -84,8 +78,7 @@ class Taxon < ApplicationRecord
     base = specimen_assets.where(status: "approved")
     case id_status
     when "verified" then base.where(id_status: "verified")
-    when "unverified" then base.where(id_status: "unverified")
-    when "mixed" then base.where(id_status: "mixed")
+    when "unverified" then base.where.not(id_status: "verified")
     else base
     end.order(created_at: :desc)
   end
