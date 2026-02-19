@@ -1,3 +1,6 @@
+<% content_for(:title) { "#{@taxon.scientific_name} — Specimen Gallery" } %>
+<% content_for(:meta_description) { "Browse free CC0 transparent-background cutouts of #{@taxon.scientific_name}. #{pluralize(@specimen_assets.count, "image")} available for download as PNG." } %>
+
 <div class="w-full">
   <%= link_to "← Back to Gallery", browse_path(id_status: @id_status_filter), class: "inline-block text-sm text-stone-600 dark:text-stone-400 hover:text-amber-700 dark:hover:text-amber-500 mb-8 transition-colors" %>
 
@@ -31,7 +34,7 @@
             <div class="aspect-square bg-gradient-to-br from-stone-100 to-stone-200 dark:from-stone-700 dark:to-stone-600 p-6 relative">
               <% if specimen.image.attached? %>
                 <%= image_tag specimen.image,
-                  alt: @taxon.scientific_name,
+                  alt: specimen_alt_text(specimen, @taxon),
                   loading: "lazy",
                   class: "w-full h-full object-contain" %>
               <% end %>

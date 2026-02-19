@@ -19,19 +19,23 @@ Rails.application.configure do
   config.public_file_server.headers = { "cache-control" => "public, max-age=#{1.year.to_i}" }
 
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
-  # config.asset_host = "http://assets.example.com"
+  # config.asset_host = "https://assets.example.com"
 
   # Store uploaded files in Tigris Global Object Storage (see config/storage.yml for options).
   config.active_storage.service = :tigris
 
-  # Assume all access to the app is happening through a SSL-terminating reverse proxy.
-  # config.assume_ssl = true
+  # Fly.io terminates SSL at the proxy — tell Rails to trust that.
+  config.assume_ssl = true
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  # config.force_ssl = true
+  config.force_ssl = true
 
-  # Skip http-to-https redirect for the default health check endpoint.
-  # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
+  # HSTS: tell browsers to always use HTTPS (1 year, include subdomains).
+  # Exclude the /up health check so Fly's internal HTTP checks still pass.
+  config.ssl_options = {
+    hsts: { subdomains: true },
+    redirect: { exclude: ->(request) { request.path == "/up" } }
+  }
 
   # Log to STDOUT with the current request id as a default log tag.
   config.log_tags = [ :request_id ]

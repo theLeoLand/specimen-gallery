@@ -13,7 +13,9 @@
     </div>
   <% end %>
 
-  <%= form_with model: @specimen_asset, class: "space-y-6", data: { controller: "license image-upload" } do |f| %>
+  <%= form_with model: @specimen_asset, class: "space-y-6", data: { controller: "image-upload" } do |f| %>
+    <%= f.hidden_field :license, value: "CC0" %>
+
     <!-- Specimen Name (REQUIRED) -->
     <div>
       <%= f.label :specimen_name, "Specimen name", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
@@ -58,34 +60,34 @@
       </label>
     </div>
 
-    <!-- Category selector -->
-    <div>
-      <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">Category</label>
-      <%= select_tag "specimen_asset[group]",
-        options_for_select(TaxonGroupResolver.all_with_metadata.map { |g| ["#{g[:icon]} #{g[:name]}", g[:value]] }),
-        include_blank: "Select a category...",
-        class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
-      <p class="mt-1 text-xs text-stone-500 dark:text-stone-400">What type of specimen is this? Auto-detected if GBIF match found.</p>
-    </div>
-
-    <div>
-      <%= f.label :common_name, class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
-      <%= f.text_field :common_name,
-        placeholder: "e.g., Honey Bee (optional)",
-        class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
-    </div>
-
     <!-- Specimen Details (collapsible) -->
     <details class="group">
       <summary class="cursor-pointer text-sm font-medium text-amber-600 dark:text-amber-500 hover:underline flex items-center gap-1">
         <svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>
-        Add specimen details (sex, life stage, view, location…)
+        Add more details (common name, category, traits…)
       </summary>
 
       <div class="mt-4 space-y-4 p-4 bg-stone-50 dark:bg-stone-800/50 rounded-xl border border-stone-200 dark:border-stone-700">
-        <!-- Row 1: Sex + Life Stage -->
+        <!-- Common name + Category -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <%= f.label :common_name, class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
+            <%= f.text_field :common_name,
+              placeholder: "e.g., Honey Bee",
+              class: "w-full px-3 py-2 bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg text-stone-800 dark:text-stone-200 placeholder:text-stone-400 text-sm" %>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">Category</label>
+            <%= select_tag "specimen_asset[group]",
+              options_for_select(TaxonGroupResolver.all_with_metadata.map { |g| ["#{g[:icon]} #{g[:name]}", g[:value]] }),
+              include_blank: "Auto-detect",
+              class: "w-full px-3 py-2 bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg text-stone-800 dark:text-stone-200 text-sm" %>
+          </div>
+        </div>
+
+        <!-- Sex + Life Stage -->
         <div class="grid grid-cols-2 gap-4">
           <div>
             <%= f.label :sex, class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
@@ -103,7 +105,7 @@
           </div>
         </div>
 
-        <!-- Row 2: View + Part -->
+        <!-- View + Part -->
         <div class="grid grid-cols-2 gap-4">
           <div>
             <%= f.label :view, "View angle", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
@@ -121,7 +123,7 @@
           </div>
         </div>
 
-        <!-- Morph (for color variants, seasonal forms, etc.) -->
+        <!-- Morph -->
         <div>
           <%= f.label :morph, "Morph / variant", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
           <%= f.text_field :morph,
@@ -133,48 +135,20 @@
         <div>
           <%= f.label :region, "Location observed", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
           <%= f.text_field :region,
-            placeholder: "e.g., California, USA / Kent, England / Queensland, Australia",
+            placeholder: "e.g., California, USA",
             class: "w-full px-3 py-2 bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg text-stone-800 dark:text-stone-200 placeholder:text-stone-400 text-sm" %>
-          <p class="mt-1 text-xs text-stone-500 dark:text-stone-400">Where was this specimen photographed?</p>
         </div>
 
         <!-- Notes -->
         <div>
           <%= f.label :notes, class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
           <%= f.text_area :notes,
-            placeholder: "Any additional context about this specimen...",
+            placeholder: "Any additional context...",
             rows: 2,
             class: "w-full px-3 py-2 bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg text-stone-800 dark:text-stone-200 placeholder:text-stone-400 text-sm resize-none" %>
         </div>
       </div>
     </details>
-
-    <div>
-      <%= f.label :license, class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
-      <%= f.select :license,
-        [["CC0 (Public Domain)", "CC0"], ["CC-BY (Attribution Required)", "CC_BY"]],
-        {},
-        class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent",
-        data: { action: "change->license#toggle", license_target: "select" } %>
-    </div>
-
-    <div data-license-target="attribution" class="hidden space-y-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
-      <p class="text-sm text-amber-800 dark:text-amber-300 mb-4">CC-BY requires attribution information:</p>
-
-      <div>
-        <%= f.label :attribution_name, "Your Name / Organization", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
-        <%= f.text_field :attribution_name,
-          placeholder: "e.g., Jane Doe",
-          class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
-      </div>
-
-      <div>
-        <%= f.label :attribution_url, "Attribution URL", class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
-        <%= f.url_field :attribution_url,
-          placeholder: "https://...",
-          class: "w-full px-4 py-3 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 rounded-xl text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent" %>
-      </div>
-    </div>
 
     <div>
       <%= f.label :image, class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
@@ -239,7 +213,7 @@
     </div>
 
     <p class="text-xs text-stone-500 dark:text-stone-400 text-center">
-      Submissions may be reviewed before appearing in the gallery.
+      All uploads are released under <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" class="underline hover:text-amber-600">CC0 (Public Domain)</a>.
     </p>
     <p class="text-xs text-stone-400 dark:text-stone-500 text-center mt-1">
       All appropriate uploads are welcome — even imperfect specimens help grow the dataset.

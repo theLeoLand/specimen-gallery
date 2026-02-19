@@ -1,13 +1,37 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "Specimen Gallery" %></title>
+    <title><%= content_for(:title) || "Specimen Gallery – Free CC0 Specimen Cutouts (PNG, Transparent Background)" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="<%= content_for(:meta_description) || "Free, high-quality transparent-background specimen cutouts (PNG). CC0 public domain — use for illustration, research, education, and design. Open-source and community-built." %>">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Specimen Gallery">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
+
+    <%# Canonical URL %>
+    <% if Rails.env.production? %>
+      <link rel="canonical" href="<%= content_for(:canonical_url) || request.original_url %>">
+    <% end %>
+
+    <%# OpenGraph tags %>
+    <meta property="og:site_name" content="Specimen Gallery">
+    <meta property="og:type" content="<%= content_for(:og_type) || "website" %>">
+    <meta property="og:title" content="<%= content_for(:og_title) || content_for(:title) || "Specimen Gallery – Free CC0 Specimen Cutouts" %>">
+    <meta property="og:description" content="<%= content_for(:og_description) || content_for(:meta_description) || "Free, high-quality transparent-background specimen cutouts (PNG). CC0 public domain — open-source and community-built." %>">
+    <meta property="og:url" content="<%= content_for(:canonical_url) || request.original_url %>">
+    <% if content_for?(:og_image) %>
+      <meta property="og:image" content="<%= content_for(:og_image) %>">
+    <% end %>
+
+    <%# Twitter Card %>
+    <meta name="twitter:card" content="<%= content_for?(:og_image) ? "summary_large_image" : "summary" %>">
+    <meta name="twitter:title" content="<%= content_for(:og_title) || content_for(:title) || "Specimen Gallery – Free CC0 Specimen Cutouts" %>">
+    <meta name="twitter:description" content="<%= content_for(:og_description) || content_for(:meta_description) || "Free, high-quality transparent-background specimen cutouts (PNG). CC0 public domain." %>">
+    <% if content_for?(:og_image) %>
+      <meta name="twitter:image" content="<%= content_for(:og_image) %>">
+    <% end %>
 
     <%= yield :head %>
 

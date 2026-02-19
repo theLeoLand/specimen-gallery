@@ -1,3 +1,11 @@
+<% content_for(:title) { "#{@specimen_asset.display_name} — Specimen Gallery" } %>
+<% content_for(:meta_description) { "Free CC0 transparent-background cutout of #{@specimen_asset.display_name}. Download high-quality PNG for illustration, research, and design." } %>
+<% content_for(:og_title) { "#{@specimen_asset.display_name} — Free CC0 Specimen Cutout" } %>
+<% content_for(:og_description) { "Download a free transparent-background PNG of #{@specimen_asset.display_name}. CC0 public domain — no attribution required." } %>
+<% if @specimen_asset.image.attached? %>
+  <% content_for(:og_image) { url_for(@specimen_asset.image) } %>
+<% end %>
+
 <div class="max-w-4xl mx-auto">
   <!-- Back link -->
   <div class="mb-6">
@@ -10,7 +18,7 @@
     <div class="bg-gradient-to-br from-stone-100 to-stone-200 dark:from-stone-700 dark:to-stone-600 rounded-2xl p-6 flex items-center justify-center min-h-[400px]">
       <% if @specimen_asset.image.attached? %>
         <%= image_tag @specimen_asset.image,
-          alt: @specimen_asset.display_name,
+          alt: specimen_alt_text(@specimen_asset),
           class: "max-w-full max-h-[500px] object-contain" %>
       <% else %>
         <div class="text-stone-500">No image available</div>
