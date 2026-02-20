@@ -1,7 +1,10 @@
-<% content_for(:title) { "#{@specimen_asset.display_name} — Specimen Gallery" } %>
-<% content_for(:meta_description) { "Free CC0 transparent-background cutout of #{@specimen_asset.display_name}. Download high-quality PNG for illustration, research, and design." } %>
-<% content_for(:og_title) { "#{@specimen_asset.display_name} — Free CC0 Specimen Cutout" } %>
-<% content_for(:og_description) { "Download a free transparent-background PNG of #{@specimen_asset.display_name}. CC0 public domain — no attribution required." } %>
+<% scientific = @specimen_asset.taxon.scientific_name %>
+<% display = @specimen_asset.display_name %>
+<% full_name = scientific.present? && scientific != display ? "#{display} (#{scientific})" : display %>
+<% content_for(:title) { "#{full_name} – CC0 Transparent PNG | Specimen Gallery" } %>
+<% content_for(:meta_description) { "Free CC0 transparent background cutout of #{display}. Public domain specimen image for research, visualization, and illustration." } %>
+<% content_for(:og_title) { "#{full_name} – CC0 Transparent PNG" } %>
+<% content_for(:og_description) { "Free CC0 transparent background cutout of #{display}. Public domain specimen image for research, visualization, and illustration." } %>
 <% if @specimen_asset.image.attached? %>
   <% content_for(:og_image) { url_for(@specimen_asset.image) } %>
 <% end %>
@@ -98,11 +101,12 @@
       </div>
 
       <!-- Metadata -->
-      <div class="text-sm text-stone-500 dark:text-stone-400 space-y-1">
+      <div class="text-sm text-stone-500 dark:text-stone-400 space-y-1.5">
+        <p>Uploaded: <%= @specimen_asset.created_at.strftime("%b %-d, %Y") %></p>
         <p>License: <%= @specimen_asset.license == "CC0" ? "CC0 (Public Domain)" : "CC-BY" %></p>
         <% if @specimen_asset.license == "CC_BY" && @specimen_asset.attribution_name.present? %>
           <p>
-            Attribution:
+            Credit:
             <% if @specimen_asset.attribution_url.present? %>
               <%= link_to @specimen_asset.attribution_name, @specimen_asset.attribution_url,
                 target: "_blank", rel: "noopener",

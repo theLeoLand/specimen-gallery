@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "Specimen Gallery – Free CC0 Specimen Cutouts (PNG, Transparent Background)" %></title>
+    <title><%= content_for(:title) || "Specimen Gallery – Public Domain Natural Specimen Cutouts" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="description" content="<%= content_for(:meta_description) || "Free, high-quality transparent-background specimen cutouts (PNG). CC0 public domain — use for illustration, research, education, and design. Open-source and community-built." %>">
+    <meta name="description" content="<%= content_for(:meta_description) || "An open-source, public domain gallery of natural specimen cutouts — free to use, contribute, and build on." %>">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Specimen Gallery">
     <meta name="mobile-web-app-capable" content="yes">
@@ -18,8 +18,8 @@
     <%# OpenGraph tags %>
     <meta property="og:site_name" content="Specimen Gallery">
     <meta property="og:type" content="<%= content_for(:og_type) || "website" %>">
-    <meta property="og:title" content="<%= content_for(:og_title) || content_for(:title) || "Specimen Gallery – Free CC0 Specimen Cutouts" %>">
-    <meta property="og:description" content="<%= content_for(:og_description) || content_for(:meta_description) || "Free, high-quality transparent-background specimen cutouts (PNG). CC0 public domain — open-source and community-built." %>">
+    <meta property="og:title" content="<%= content_for(:og_title) || content_for(:title) || "Specimen Gallery – Public Domain Natural Specimen Cutouts" %>">
+    <meta property="og:description" content="<%= content_for(:og_description) || content_for(:meta_description) || "An open-source, public domain gallery of natural specimen cutouts — free to use, contribute, and build on." %>">
     <meta property="og:url" content="<%= content_for(:canonical_url) || request.original_url %>">
     <% if content_for?(:og_image) %>
       <meta property="og:image" content="<%= content_for(:og_image) %>">
@@ -27,8 +27,8 @@
 
     <%# Twitter Card %>
     <meta name="twitter:card" content="<%= content_for?(:og_image) ? "summary_large_image" : "summary" %>">
-    <meta name="twitter:title" content="<%= content_for(:og_title) || content_for(:title) || "Specimen Gallery – Free CC0 Specimen Cutouts" %>">
-    <meta name="twitter:description" content="<%= content_for(:og_description) || content_for(:meta_description) || "Free, high-quality transparent-background specimen cutouts (PNG). CC0 public domain." %>">
+    <meta name="twitter:title" content="<%= content_for(:og_title) || content_for(:title) || "Specimen Gallery – Public Domain Natural Specimen Cutouts" %>">
+    <meta name="twitter:description" content="<%= content_for(:og_description) || content_for(:meta_description) || "An open-source, public domain gallery of natural specimen cutouts — free to use, contribute, and build on." %>">
     <% if content_for?(:og_image) %>
       <meta name="twitter:image" content="<%= content_for(:og_image) %>">
     <% end %>
@@ -129,6 +129,8 @@
           <%= link_to "Upload Guide", upload_guide_path, class: "hover:text-stone-700 dark:hover:text-stone-200 transition-colors" %>
           <span class="text-stone-300 dark:text-stone-600">·</span>
           <%= link_to "Terms", terms_path, class: "hover:text-stone-700 dark:hover:text-stone-200 transition-colors" %>
+          <span class="text-stone-300 dark:text-stone-600">·</span>
+          <%= link_to "https://github.com/chispainnov/specimen-gallery", target: "_blank", rel: "noopener", class: "hover:text-stone-700 dark:hover:text-stone-200 transition-colors" do %>Open Source<% end %>
         </div>
       </div>
     </footer>
