@@ -11,7 +11,7 @@ An open-source, community-built collection of high-quality, transparent-backgrou
 - **Community uploads** with automatic background removal (via Cloudinary)
 - **GBIF integration** for taxonomic name validation
 - **Community ID verification** — confirm or suggest identifications
-- **Clean licensing** — CC0 (public domain) or CC-BY
+- **Clean licensing** — CC0 (public domain)
 - **Quality moderation** — auto-publish for verified names, review queue for uncertain IDs
 - **Trait tagging** — sex, life stage, view angle, body part
 
@@ -83,10 +83,7 @@ Visit `/your_route_secret/admin/specimen_assets` to access the moderation queue.
 
 ## Licensing
 
-Contributors choose their license:
-
-- **CC0** — Public domain, no attribution required
-- **CC-BY** — Free to use, attribution required
+All specimen images are released under **CC0 (Public Domain)** — no attribution required, free to use for any purpose.
 
 By uploading, contributors confirm they hold rights to the image.
 
@@ -106,7 +103,7 @@ Found a vulnerability? See [SECURITY.md](SECURITY.md) for responsible disclosure
 
 This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
 
-Note: The *code* is MIT licensed. *Specimen images* in the gallery are licensed individually by their contributors (CC0 or CC-BY).
+Note: The *code* is MIT licensed. *Specimen images* in the gallery are CC0 (Public Domain).
 
 ## Acknowledgments
 
