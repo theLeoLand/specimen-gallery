@@ -1,3 +1,4 @@
-<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="256" cy="256" r="256" fill="red"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <circle cx="50" cy="50" r="50" fill="#c1672a"/>
+  <text x="50" y="67" font-family="Georgia, 'Times New Roman', serif" font-size="46" font-weight="normal" fill="white" text-anchor="middle" letter-spacing="-1">SG</text>
 </svg>
