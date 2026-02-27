@@ -206,7 +206,16 @@
       </label>
     </div>
 
-    <div class="pt-4">
+    <div class="p-4 bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl">
+      <label class="flex items-start gap-3 cursor-pointer">
+        <%= check_box_tag "cc0_attestation", "1", false,
+          required: true,
+          class: "mt-0.5 w-4 h-4 text-amber-600 border-stone-300 dark:border-stone-600 rounded focus:ring-amber-500 flex-shrink-0" %>
+        <span class="text-sm text-stone-600 dark:text-stone-400">I confirm I own the rights to this image and am releasing it under <span class="font-medium text-stone-700 dark:text-stone-300">CC0 (Public Domain)</span>.</span>
+      </label>
+    </div>
+
+    <div class="pt-2">
       <%= f.submit "Submit Specimen",
         data: { image_upload_target: "submitButton" },
         class: "w-full px-6 py-4 bg-amber-600 text-white font-medium rounded-full hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 dark:focus:ring-offset-stone-900 transition-colors cursor-pointer" %>
@@ -214,6 +223,9 @@
 
     <p class="text-xs text-stone-500 dark:text-stone-400 text-center">
       All uploads are released under <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" class="underline hover:text-amber-600">CC0 (Public Domain)</a>.
+    </p>
+    <p class="text-xs text-stone-400 dark:text-stone-500 text-center mt-1">
+      This means anyone can use your image for any purpose, including AI training and research.
     </p>
     <p class="text-xs text-stone-400 dark:text-stone-500 text-center mt-1">
       All appropriate uploads are welcome — even imperfect specimens help grow the dataset.
