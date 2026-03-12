@@ -104,19 +104,10 @@
       <div class="text-sm text-stone-500 dark:text-stone-400 space-y-1.5">
         <p><span class="font-mono text-stone-400 dark:text-stone-500"><%= @specimen_asset.specimen_id %></span></p>
         <p>Uploaded: <%= @specimen_asset.created_at.strftime("%b %-d, %Y") %></p>
-        <p>License: <%= @specimen_asset.license == "CC0" ? "CC0 (Public Domain)" : "CC-BY" %></p>
-        <% if @specimen_asset.license == "CC_BY" && @specimen_asset.attribution_name.present? %>
-          <p>
-            Credit:
-            <% if @specimen_asset.attribution_url.present? %>
-              <%= link_to @specimen_asset.attribution_name, @specimen_asset.attribution_url,
-                target: "_blank", rel: "noopener",
-                class: "text-amber-600 dark:text-amber-500 hover:underline" %>
-            <% else %>
-              <%= @specimen_asset.attribution_name %>
-            <% end %>
-          </p>
+        <% if @specimen_asset.attribution_name.present? %>
+          <p>Uploaded by: <span class="text-stone-700 dark:text-stone-300"><%= @specimen_asset.attribution_name %></span></p>
         <% end %>
+        <p>License: <%= @specimen_asset.license == "CC0" ? "CC0 (Public Domain)" : "CC-BY" %></p>
         <% if @specimen_asset.notes.present? %>
           <p class="mt-2 text-stone-600 dark:text-stone-300"><%= @specimen_asset.notes %></p>
         <% end %>
