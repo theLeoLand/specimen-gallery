@@ -36,6 +36,10 @@ class SpecimenAsset < ApplicationRecord
     specimen_name.presence || scientific_name || "Unknown"
   end
 
+  def specimen_id
+    "SG-#{id.to_s.rjust(5, '0')}"
+  end
+
   # Whether this specimen has a verified scientific/taxonomic name
   def has_verified_taxonomy?
     taxon&.gbif_key.present?
