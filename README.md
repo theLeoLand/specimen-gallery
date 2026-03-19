@@ -38,7 +38,7 @@ An open-source, community-built collection of high-quality, transparent-backgrou
 
 ```bash
 # Clone the repo
-git clone https://github.com/chispainnov/specimen-gallery.git
+git clone https://github.com/theLeoLand/specimen-gallery.git
 cd specimen-gallery
 
 # Install dependencies
