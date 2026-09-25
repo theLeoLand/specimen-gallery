@@ -30,7 +30,7 @@
               <canvas data-image-resize-target="canvas" class="max-w-full max-h-[320px] object-contain"></canvas>
             </div>
 
-            <div class="p-3 bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 rounded-xl space-y-3">
+            <div class="p-3 bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 rounded-xl space-y-3 select-none">
               <div class="flex items-center justify-between">
                 <p class="text-xs font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wide">Adjust Image</p>
                 <p class="text-[10px] text-stone-400 dark:text-stone-500 italic">Drag image to reposition</p>
@@ -38,10 +38,10 @@
 
               <div class="flex items-center gap-3">
                 <label class="text-xs text-stone-600 dark:text-stone-400 w-10 flex-shrink-0">Size</label>
-                <input type="range" min="25" max="200" value="100" step="5"
+                <input type="range" min="25" max="500" value="100" step="5"
                        data-image-resize-target="zoomSlider"
                        data-action="input->image-resize#adjustZoom"
-                       class="flex-grow h-1.5 bg-stone-200 dark:bg-stone-600 rounded-full appearance-none cursor-pointer accent-amber-600">
+                       class="flex-grow min-w-0 h-1.5 bg-stone-200 dark:bg-stone-600 rounded-full appearance-none cursor-pointer accent-amber-600">
                 <span data-image-resize-target="zoomValue" class="text-xs text-stone-500 dark:text-stone-400 w-10 text-right">100%</span>
               </div>
 
@@ -53,7 +53,7 @@
                 <input type="range" min="-100" max="100" value="0" step="1"
                        data-image-resize-target="panXSlider"
                        data-action="input->image-resize#adjustPanX"
-                       class="flex-grow h-1.5 bg-stone-200 dark:bg-stone-600 rounded-full appearance-none cursor-pointer accent-amber-600">
+                       class="flex-grow min-w-0 h-1.5 bg-stone-200 dark:bg-stone-600 rounded-full appearance-none cursor-pointer accent-amber-600">
                 <span data-image-resize-target="panXValue" class="text-xs text-stone-500 dark:text-stone-400 w-10 text-right tabular-nums">0</span>
               </div>
 
@@ -65,7 +65,7 @@
                 <input type="range" min="-100" max="100" value="0" step="1"
                        data-image-resize-target="panYSlider"
                        data-action="input->image-resize#adjustPanY"
-                       class="flex-grow h-1.5 bg-stone-200 dark:bg-stone-600 rounded-full appearance-none cursor-pointer accent-amber-600">
+                       class="flex-grow min-w-0 h-1.5 bg-stone-200 dark:bg-stone-600 rounded-full appearance-none cursor-pointer accent-amber-600">
                 <span data-image-resize-target="panYValue" class="text-xs text-stone-500 dark:text-stone-400 w-10 text-right tabular-nums">0</span>
               </div>
 
