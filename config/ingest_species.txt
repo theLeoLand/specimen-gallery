@@ -1,0 +1,51 @@
+# config/ingest_species.txt
+#
+# Species pool for `bin/ingest --batch` (and the future scheduled job).
+# One scientific name per line. Lines starting with # and blank lines are ignored.
+#
+# Each batch run picks the species with the FEWEST imported specimens first, so
+# coverage spreads across this list over time instead of drying up one species.
+# Add/remove freely — pick species that are well photographed on iNaturalist and
+# make good single-subject cutouts.
+
+# --- Insects & spiders ---
+Danaus plexippus
+Papilio machaon
+Vanessa atalanta
+Vanessa cardui
+Pieris rapae
+Coccinella septempunctata
+Apis mellifera
+Bombus terrestris
+Bombus pascuorum
+Xylocopa violacea
+Anax junius
+Sympetrum striolatum
+Araneus diadematus
+Mantis religiosa
+
+# --- Reptiles & amphibians ---
+Sceloporus occidentalis
+Anolis carolinensis
+Podarcis muralis
+Lithobates catesbeianus
+
+# --- Mollusks ---
+Cornu aspersum
+Helix pomatia
+
+# --- Fungi ---
+Amanita muscaria
+Cantharellus cibarius
+
+# --- Plants & flowers ---
+Helianthus annuus
+Taraxacum officinale
+Bellis perennis
+Trifolium repens
+Papaver rhoeas
+Digitalis purpurea
+
+# --- Birds ---
+Cardinalis cardinalis
+Cyanocitta cristata

@@ -4,14 +4,20 @@
 # Runs the CC0 iNaturalist → BiRefNet cutout → GBIF → store pipeline locally.
 # Defaults to your DEV database + the review queue, so it's safe to experiment.
 #
-# Usage:
+# Single species:
 #   bin/ingest "Danaus plexippus"                 # dev, LIMIT=25, review queue
 #   bin/ingest "Danaus plexippus" 10              # dev, LIMIT=10
 #   bin/ingest "Danaus plexippus" 10 --dry-run    # preview only (no downloads/writes)
 #   bin/ingest "Danaus plexippus" 5  --prod       # LIVE site (needs .env.ingest)
-#   bin/ingest "Danaus plexippus" 25 --prod --publish   # live + auto-publish good matches
+#
+# Batch (rotating pool from config/ingest_species.txt — 5 species x 5 each):
+#   bin/ingest --batch --dry-run                  # preview the batch
+#   bin/ingest --batch                            # into DEV
+#   bin/ingest --batch --prod                     # into the LIVE site
+#   PER_SPECIES=10 SPECIES_PER_RUN=8 bin/ingest --batch --prod
 #
 # Flags:
+#   --batch     process a rotating set of species from config/ingest_species.txt
 #   --prod      write to the LIVE production DB + storage (reads .env.ingest)
 #   --dry-run   only list candidate photos; download/save nothing
 #   --publish   auto-publish strong GBIF matches (default: everything → review)
@@ -20,29 +26,41 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-TAXON="${1:-}"
-if [ -z "$TAXON" ]; then
-  echo "usage: bin/ingest \"Scientific name\" [LIMIT] [--prod] [--dry-run] [--publish]" >&2
-  exit 1
-fi
-shift
-
-LIMIT=25
+BATCH=0
 PROD=0
 DRY_RUN=0
 PUBLISH=0
 ASSUME_YES=0
+POSITIONAL=()
 
 for arg in "$@"; do
   case "$arg" in
+    --batch)     BATCH=1 ;;
     --prod)      PROD=1 ;;
     --dry-run)   DRY_RUN=1 ;;
     --publish)   PUBLISH=1 ;;
     --yes|-y)    ASSUME_YES=1 ;;
-    ''|*[!0-9]*) echo "unknown argument: $arg" >&2; exit 1 ;;
-    *)           LIMIT="$arg" ;;
+    -*)          echo "unknown flag: $arg" >&2; exit 1 ;;
+    *)           POSITIONAL+=("$arg") ;;
   esac
 done
+
+# Resolve what we're ingesting.
+if [ "$BATCH" -eq 1 ]; then
+  DESC="batch (config/ingest_species.txt)"
+else
+  TAXON="${POSITIONAL[0]:-}"
+  if [ -z "$TAXON" ]; then
+    echo "usage: bin/ingest \"Scientific name\" [LIMIT] [--prod] [--dry-run] [--publish]" >&2
+    echo "   or: bin/ingest --batch [--prod] [--dry-run] [--publish]" >&2
+    exit 1
+  fi
+  LIMIT="${POSITIONAL[1]:-25}"
+  case "$LIMIT" in
+    ''|*[!0-9]*) echo "LIMIT must be a number, got: $LIMIT" >&2; exit 1 ;;
+  esac
+  DESC="taxon=\"${TAXON}\" limit=${LIMIT}"
+fi
 
 # Locate the rembg binary (not needed for a dry run).
 if [ -z "${REMBG_BIN:-}" ]; then
@@ -74,7 +92,7 @@ if [ "$PROD" -eq 1 ]; then
   TARGET="PRODUCTION (live site)"
 fi
 
-echo "Ingest → ${TARGET} | taxon=\"${TAXON}\" limit=${LIMIT} dry_run=${DRY_RUN} publish=${PUBLISH}"
+echo "Ingest → ${TARGET} | ${DESC} dry_run=${DRY_RUN} publish=${PUBLISH}"
 
 # Guard rail: confirm before writing to the live site.
 if [ "$PROD" -eq 1 ] && [ "$ASSUME_YES" -ne 1 ] && [ "$DRY_RUN" -ne 1 ]; then
@@ -86,9 +104,8 @@ if [ "$PROD" -eq 1 ] && [ "$ASSUME_YES" -ne 1 ] && [ "$DRY_RUN" -ne 1 ]; then
   fi
 fi
 
-exec env \
-  TAXON="$TAXON" \
-  LIMIT="$LIMIT" \
-  DRY_RUN="$DRY_RUN" \
-  PUBLISH="$PUBLISH" \
-  bin/rails specimen:ingest
+if [ "$BATCH" -eq 1 ]; then
+  exec env DRY_RUN="$DRY_RUN" PUBLISH="$PUBLISH" bin/rails specimen:ingest_batch
+else
+  exec env TAXON="$TAXON" LIMIT="$LIMIT" DRY_RUN="$DRY_RUN" PUBLISH="$PUBLISH" bin/rails specimen:ingest
+fi
