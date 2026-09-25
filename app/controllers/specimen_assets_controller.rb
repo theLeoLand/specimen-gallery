@@ -287,7 +287,7 @@ class SpecimenAssetsController < ApplicationController
           gbif_rank: gbif_match[:rank],
           taxon_source: "gbif",
           taxon_id: gbif_match[:usage_key].to_s,
-          group: TaxonGroupResolver.resolve_from_gbif(gbif_match)
+          group: TaxonGroupResolver.resolve(gbif_match)
         )
       end
       taxon
@@ -440,46 +440,11 @@ class SpecimenAssetsController < ApplicationController
   end
 
   def find_or_create_taxon_with_gbif(scientific_name, gbif_match, is_good_match, user_group = nil)
-    canonical = is_good_match && gbif_match ? gbif_match[:canonical_name] : nil
-    lookup_name = canonical.presence || scientific_name
-
-    taxon = Taxon.where("LOWER(scientific_name) = LOWER(?)", lookup_name).first
-
-    if taxon
-      # Update existing taxon with GBIF data if we have a good match
-      if is_good_match && gbif_match && taxon.gbif_key.nil?
-        attrs = gbif_attributes(gbif_match)
-        attrs[:group] = TaxonGroupResolver.resolve(gbif_match) if taxon.group.blank?
-        taxon.update(attrs)
-      # If no GBIF match but user provided a group, update it
-      elsif taxon.group.blank? && user_group.present?
-        taxon.update(group: user_group)
-      end
-      taxon
-    else
-      attrs = { scientific_name: lookup_name }
-      if is_good_match && gbif_match
-        attrs.merge!(gbif_attributes(gbif_match))
-        attrs[:group] = TaxonGroupResolver.resolve(gbif_match)
-      elsif user_group.present?
-        attrs[:group] = user_group
-      else
-        attrs[:group] = "other"
-      end
-      Taxon.create!(attrs)
-    end
+    TaxonResolver.find_or_create(scientific_name, gbif_match, is_good_match, user_group)
   end
 
   def gbif_attributes(match)
-    {
-      taxon_source: "gbif",
-      taxon_id: match[:usage_key]&.to_s,
-      gbif_key: match[:usage_key],
-      gbif_rank: match[:rank],
-      gbif_canonical_name: match[:canonical_name],
-      gbif_confidence: match[:confidence],
-      gbif_match_type: match[:match_type]
-    }
+    TaxonResolver.gbif_attributes(match)
   end
 
   def send_submission_email(specimen_asset)

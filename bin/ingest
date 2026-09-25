@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# bin/ingest — one-command wrapper around the specimen ingestion pipeline.
+#
+# Runs the CC0 iNaturalist → BiRefNet cutout → GBIF → store pipeline locally.
+# Defaults to your DEV database + the review queue, so it's safe to experiment.
+#
+# Usage:
+#   bin/ingest "Danaus plexippus"                 # dev, LIMIT=25, review queue
+#   bin/ingest "Danaus plexippus" 10              # dev, LIMIT=10
+#   bin/ingest "Danaus plexippus" 10 --dry-run    # preview only (no downloads/writes)
+#   bin/ingest "Danaus plexippus" 5  --prod       # LIVE site (needs .env.ingest)
+#   bin/ingest "Danaus plexippus" 25 --prod --publish   # live + auto-publish good matches
+#
+# Flags:
+#   --prod      write to the LIVE production DB + storage (reads .env.ingest)
+#   --dry-run   only list candidate photos; download/save nothing
+#   --publish   auto-publish strong GBIF matches (default: everything → review)
+#   --yes, -y   skip the production confirmation prompt
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+TAXON="${1:-}"
+if [ -z "$TAXON" ]; then
+  echo "usage: bin/ingest \"Scientific name\" [LIMIT] [--prod] [--dry-run] [--publish]" >&2
+  exit 1
+fi
+shift
+
+LIMIT=25
+PROD=0
+DRY_RUN=0
+PUBLISH=0
+ASSUME_YES=0
+
+for arg in "$@"; do
+  case "$arg" in
+    --prod)      PROD=1 ;;
+    --dry-run)   DRY_RUN=1 ;;
+    --publish)   PUBLISH=1 ;;
+    --yes|-y)    ASSUME_YES=1 ;;
+    ''|*[!0-9]*) echo "unknown argument: $arg" >&2; exit 1 ;;
+    *)           LIMIT="$arg" ;;
+  esac
+done
+
+# Locate the rembg binary (not needed for a dry run).
+if [ -z "${REMBG_BIN:-}" ]; then
+  if command -v rembg >/dev/null 2>&1; then
+    REMBG_BIN="$(command -v rembg)"
+  elif [ -x "$HOME/.local/bin/rembg" ]; then
+    REMBG_BIN="$HOME/.local/bin/rembg"
+  fi
+fi
+export REMBG_BIN
+
+TARGET="DEV database"
+if [ "$PROD" -eq 1 ]; then
+  if [ ! -f ".env.ingest" ]; then
+    echo "Missing .env.ingest — copy the template first:" >&2
+    echo "    cp .env.ingest.example .env.ingest   # then fill in your live creds" >&2
+    exit 1
+  fi
+  # Load and export every var defined in .env.ingest.
+  set -a
+  # shellcheck disable=SC1091
+  . ./.env.ingest
+  set +a
+  export RAILS_ENV=production
+  TARGET="PRODUCTION (live site)"
+fi
+
+echo "Ingest → ${TARGET} | taxon=\"${TAXON}\" limit=${LIMIT} dry_run=${DRY_RUN} publish=${PUBLISH}"
+
+# Guard rail: confirm before writing to the live site.
+if [ "$PROD" -eq 1 ] && [ "$ASSUME_YES" -ne 1 ] && [ "$DRY_RUN" -ne 1 ]; then
+  printf 'This writes to the LIVE site. Type "yes" to continue: '
+  read -r reply
+  if [ "$reply" != "yes" ]; then
+    echo "Aborted."
+    exit 1
+  fi
+fi
+
+exec env \
+  TAXON="$TAXON" \
+  LIMIT="$LIMIT" \
+  DRY_RUN="$DRY_RUN" \
+  PUBLISH="$PUBLISH" \
+  bin/rails specimen:ingest

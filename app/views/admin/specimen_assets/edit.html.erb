@@ -74,6 +74,11 @@
                         class="px-3 py-1.5 text-xs font-medium bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 rounded-full hover:bg-stone-100 dark:hover:bg-stone-600 transition-colors">
                   Auto-trim
                 </button>
+                <button type="button" data-action="click->image-resize#rotate"
+                        class="px-3 py-1.5 text-xs font-medium bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 rounded-full hover:bg-stone-100 dark:hover:bg-stone-600 transition-colors inline-flex items-center gap-1">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                  Rotate 90°
+                </button>
                 <button type="button" data-action="click->image-resize#recenter"
                         class="px-3 py-1.5 text-xs font-medium bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 rounded-full hover:bg-stone-100 dark:hover:bg-stone-600 transition-colors inline-flex items-center gap-1">
                   <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v8m-4-4h8M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -104,7 +109,7 @@
           <% if @specimen_asset.bg_removed? %>
             <p class="flex items-center gap-1.5">
               <span class="w-2 h-2 rounded-full bg-violet-500"></span>
-              Background removed via Cloudinary
+              Background removed<%= @specimen_asset.imported? ? " (BiRefNet)" : " via Cloudinary" %>
             </p>
           <% end %>
           <% if @specimen_asset.submitter_email.present? %>
@@ -117,6 +122,42 @@
             <p>By: <%= @specimen_asset.attribution_name %></p>
           <% end %>
         </div>
+
+        <!-- Import provenance (ADMIN-ONLY — never rendered on public pages) -->
+        <% if @specimen_asset.imported? %>
+          <% prov = @specimen_asset.import_provenance %>
+          <div class="mt-4 p-3 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-xl space-y-1.5 text-xs">
+            <p class="font-medium text-sky-800 dark:text-sky-300 uppercase tracking-wide flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+              Import source · admin only
+            </p>
+            <p class="text-stone-600 dark:text-stone-400">Source: <%= prov["import_source"].to_s.titleize %></p>
+            <% if prov["source_url"].present? %>
+              <p>
+                <%= link_to "View original observation ↗", prov["source_url"],
+                  target: "_blank", rel: "noopener noreferrer nofollow",
+                  class: "text-sky-600 dark:text-sky-400 hover:underline break-all" %>
+              </p>
+            <% end %>
+            <% if prov["observer"].present? %>
+              <p class="text-stone-600 dark:text-stone-400">Observer: <%= prov["observer"] %></p>
+            <% end %>
+            <% if prov["photo_license"].present? %>
+              <p class="text-stone-600 dark:text-stone-400">Photo license: <%= prov["photo_license"].to_s.upcase %></p>
+            <% end %>
+            <% if prov["photo_attribution"].present? %>
+              <p class="text-stone-500 dark:text-stone-400 italic"><%= prov["photo_attribution"] %></p>
+            <% end %>
+            <% if @specimen_asset.qc_reasons.any? %>
+              <p class="text-amber-600 dark:text-amber-400 font-medium">
+                QC flags: <%= @specimen_asset.qc_reasons.join(", ") %>
+                <% if prov["opaque_ratio"] %>
+                  <span class="text-stone-400 dark:text-stone-500 font-normal">(opaque <%= (prov["opaque_ratio"].to_f * 100).round(1) %>%, blobs <%= prov["subject_blobs"] %>)</span>
+                <% end %>
+              </p>
+            <% end %>
+          </div>
+        <% end %>
       </div>
     </div>
 

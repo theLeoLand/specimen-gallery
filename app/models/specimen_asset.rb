@@ -57,6 +57,28 @@ class SpecimenAsset < ApplicationRecord
     qc_flags&.dig("profanity_fields") || []
   end
 
+  # --- Bulk-import provenance (stored in qc_flags; ADMIN-ONLY, never public) ---
+  # Whether this asset came from the bulk ingestion pipeline.
+  def imported?
+    qc_flags.is_a?(Hash) && qc_flags["import_source"].present?
+  end
+
+  # Traceable source metadata for the admin review UI (backlink to the original).
+  def import_provenance
+    return {} unless qc_flags.is_a?(Hash)
+
+    qc_flags.slice(
+      "import_source", "source_url", "observer", "photo_attribution",
+      "photo_license", "inat_observation_id", "inat_photo_id", "imported_at",
+      "qc_reasons", "opaque_ratio", "subject_blobs"
+    )
+  end
+
+  # Automated QC reasons recorded at ingest time (e.g. "multi_subject").
+  def qc_reasons
+    Array(qc_flags.is_a?(Hash) ? qc_flags["qc_reasons"] : nil)
+  end
+
   # Count of open community flags
   def open_flags_count
     flags.open_flags.count

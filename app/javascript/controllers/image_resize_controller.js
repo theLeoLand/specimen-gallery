@@ -25,6 +25,8 @@ export default class extends Controller {
   // 0 = centered. Positive X = right, positive Y = down.
   panX = 0
   panY = 0
+  // rotation in degrees, always a multiple of 90.
+  rotation = 0
   trimBounds = null
   active = false
   loaded = false
@@ -120,6 +122,7 @@ export default class extends Controller {
         this.zoom = 100
         this.panX = 0
         this.panY = 0
+        this.rotation = 0
         this.trimBounds = null
         this.resetSliders()
         resolve()
@@ -150,13 +153,25 @@ export default class extends Controller {
     const drawH = Math.round(bounds.h * scale)
     const offsetX = Math.round(this.panX * frameSize / 2)
     const offsetY = Math.round(this.panY * frameSize / 2)
-    const drawX = Math.round((frameSize - drawW) / 2) + offsetX
-    const drawY = Math.round((frameSize - drawH) / 2) + offsetY
 
     ctx.clearRect(0, 0, frameSize, frameSize)
-    ctx.drawImage(img, bounds.x, bounds.y, bounds.w, bounds.h, drawX, drawY, drawW, drawH)
+    ctx.save()
+    // Pan first (screen space), then rotate about the panned center so the
+    // drag/pan direction stays intuitive regardless of orientation.
+    ctx.translate(frameSize / 2 + offsetX, frameSize / 2 + offsetY)
+    if (this.rotation) ctx.rotate((this.rotation * Math.PI) / 180)
+    ctx.drawImage(img, bounds.x, bounds.y, bounds.w, bounds.h, -drawW / 2, -drawH / 2, drawW, drawH)
+    ctx.restore()
 
     this.active = true
+  }
+
+  // Rotate the image 90° clockwise per click (cycles 0 → 90 → 180 → 270 → 0).
+  rotate() {
+    if (!this.previewImage) return
+    this.rotation = (this.rotation + 90) % 360
+    this.redrawCanvas()
+    this.flashStatus(`Rotated ${this.rotation}°`)
   }
 
   adjustZoom(event) {
@@ -305,6 +320,7 @@ export default class extends Controller {
     this.zoom = 100
     this.panX = 0
     this.panY = 0
+    this.rotation = 0
     this.trimBounds = null
     this.resetSliders()
     if (this.previewImage && this.hasCanvasTarget) this.redrawCanvas()
