@@ -61,11 +61,15 @@ if [ "$PROD" -eq 1 ]; then
     echo "    cp .env.ingest.example .env.ingest   # then fill in your live creds" >&2
     exit 1
   fi
-  # Load and export every var defined in .env.ingest.
-  set -a
-  # shellcheck disable=SC1091
-  . ./.env.ingest
-  set +a
+  # Load .env.ingest line by line (do NOT `source` it — values like DATABASE_URL
+  # contain `&`/`?` which the shell would mis-parse). This reads each KEY=value
+  # literally, so raw pasted values work without quoting.
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      ''|\#*) continue ;;            # skip blanks and comments
+      *=*)    export "${line%%=*}=${line#*=}" ;;
+    esac
+  done < .env.ingest
   export RAILS_ENV=production
   TARGET="PRODUCTION (live site)"
 fi
