@@ -44,6 +44,16 @@ class InaturalistClient
   end
 
   def cc0_photos
+    # Resolve the name to an exact iNat taxon_id FIRST. Searching observations by
+    # `taxon_name` is a fuzzy text match and pulls in unrelated species that share
+    # a word (e.g. "Cardinalis cardinalis" → "Aegithus cardinalis"). Filtering by
+    # taxon_id returns only this taxon and its descendants (subspecies).
+    unless taxon_id
+      Rails.logger.warn("iNaturalist: could not resolve taxon_id for #{@taxon_name.inspect}; skipping to avoid wrong-species matches")
+      return []
+    end
+    sleep(REQUEST_DELAY) # be polite between the taxa lookup and observations
+
     collected = []
     page = 1
 
@@ -70,10 +80,36 @@ class InaturalistClient
 
   private
 
+  # Resolve the scientific name to an exact iNaturalist taxon_id (memoized).
+  # Prefers an exact case-insensitive name match; among matches prefers active,
+  # most-observed taxa. Returns nil if nothing matches.
+  def taxon_id
+    return @taxon_id if defined?(@taxon_id)
+
+    @taxon_id = fetch_taxon_id
+  end
+
+  def fetch_taxon_id
+    uri = URI("#{BASE_URL}/taxa")
+    uri.query = URI.encode_www_form(q: @taxon_name, per_page: 30)
+
+    body = fetch(uri)
+    results = body ? Array(body["results"]) : []
+    return nil if results.empty?
+
+    wanted = @taxon_name.to_s.strip.downcase
+    exact = results.select { |r| r["name"].to_s.strip.casecmp?(wanted) }
+    chosen = (exact.presence || results).max_by do |r|
+      [ r["is_active"] ? 1 : 0, r["observations_count"].to_i ]
+    end
+
+    chosen && chosen["id"]
+  end
+
   def fetch_page(page:, per_page:)
     uri = URI("#{BASE_URL}/observations")
     uri.query = URI.encode_www_form(
-      taxon_name: @taxon_name,
+      taxon_id: taxon_id,
       photo_license: "cc0",
       quality_grade: "research",
       photos: true,
