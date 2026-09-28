@@ -5,47 +5,206 @@
 #
 # Each batch run picks the species with the FEWEST imported specimens first, so
 # coverage spreads across this list over time instead of drying up one species.
-# Add/remove freely — pick species that are well photographed on iNaturalist and
-# make good single-subject cutouts.
+# The list is intentionally broad and skewed toward species that (a) have lots of
+# research-grade CC0 photos on iNaturalist and (b) make clean single-subject
+# cutouts (bold, high-contrast subjects). Add/remove freely.
 
-# --- Insects & spiders ---
+# =============================== INSECTS ===================================
+
+# --- Butterflies ---
 Danaus plexippus
 Papilio machaon
+Papilio polyxenes
+Papilio glaucus
+Papilio rutulus
+Battus philenor
 Vanessa atalanta
 Vanessa cardui
+Vanessa virginiensis
+Nymphalis antiopa
+Aglais io
+Aglais urticae
 Pieris rapae
+Pieris brassicae
+Colias croceus
+Gonepteryx rhamni
+Polygonia c-album
+Junonia coenia
+Limenitis arthemis
+Speyeria cybele
+Lycaena phlaeas
+Polyommatus icarus
+Celastrina argiolus
+Heliconius charithonia
+Agraulis vanillae
+Pararge aegeria
+Maniola jurtina
+
+# --- Moths ---
+Actias luna
+Antheraea polyphemus
+Hyalophora cecropia
+Automeris io
+Manduca sexta
+Deilephila elpenor
+Macroglossum stellatarum
+Sphinx ligustri
+Tyria jacobaeae
+Arctia caja
+Hemaris thysbe
+
+# --- Beetles ---
 Coccinella septempunctata
+Harmonia axyridis
+Lucanus cervus
+Dynastes tityus
+Cetonia aurata
+Chrysolina americana
+Cicindela sexguttata
+Photinus pyralis
+Chrysochroa fulgidissima
+Calosoma scrutator
+
+# --- Bees, wasps & ants ---
 Apis mellifera
 Bombus terrestris
 Bombus pascuorum
+Bombus impatiens
+Bombus lapidarius
 Xylocopa violacea
-Anax junius
-Sympetrum striolatum
-Araneus diadematus
-Mantis religiosa
+Xylocopa virginica
+Vespa crabro
+Vespula vulgaris
 
-# --- Reptiles & amphibians ---
+# --- Dragonflies & damselflies ---
+Anax junius
+Anax imperator
+Sympetrum striolatum
+Libellula depressa
+Libellula luctuosa
+Aeshna cyanea
+Calopteryx splendens
+Ischnura elegans
+Pachydiplax longipennis
+Erythemis simplicicollis
+
+# --- Other insects ---
+Mantis religiosa
+Tenodera sinensis
+Oncopeltus fasciatus
+Graphosoma italicum
+Pyrrhocoris apterus
+Magicicada septendecim
+
+# =========================== SPIDERS & ARACHNIDS ===========================
+Araneus diadematus
+Argiope aurantia
+Argiope bruennichi
+Misumena vatia
+Salticus scenicus
+Phidippus audax
+Phidippus regius
+
+# =============================== REPTILES ==================================
 Sceloporus occidentalis
 Anolis carolinensis
 Podarcis muralis
-Lithobates catesbeianus
+Lacerta agilis
+Zootoca vivipara
+Thamnophis sirtalis
+Natrix natrix
+Terrapene carolina
+Trachemys scripta
+Iguana iguana
 
-# --- Mollusks ---
+# ============================== AMPHIBIANS =================================
+Lithobates catesbeianus
+Rana temporaria
+Bufo bufo
+Anaxyrus americanus
+Hyla cinerea
+Dryophytes versicolor
+Ambystoma maculatum
+Notophthalmus viridescens
+Salamandra salamandra
+Triturus cristatus
+
+# =============================== MOLLUSKS ==================================
 Cornu aspersum
 Helix pomatia
+Cepaea nemoralis
+Arion rufus
+Limax maximus
 
-# --- Fungi ---
+# ================================ FUNGI ====================================
 Amanita muscaria
+Amanita phalloides
 Cantharellus cibarius
+Boletus edulis
+Laetiporus sulphureus
+Pleurotus ostreatus
+Coprinus comatus
+Trametes versicolor
+Ganoderma applanatum
+Hericium erinaceus
+Morchella esculenta
+Lycoperdon perlatum
+Hygrocybe coccinea
+Fomitopsis betulina
 
-# --- Plants & flowers ---
+# =========================== PLANTS & FLOWERS ==============================
 Helianthus annuus
 Taraxacum officinale
 Bellis perennis
 Trifolium repens
+Trifolium pratense
 Papaver rhoeas
 Digitalis purpurea
+Achillea millefolium
+Leucanthemum vulgare
+Centaurea cyanus
+Cirsium vulgare
+Lupinus polyphyllus
+Verbascum thapsus
+Echinacea purpurea
+Rudbeckia hirta
+Aquilegia vulgaris
+Primula vulgaris
+Ranunculus acris
+Calendula officinalis
+Tropaeolum majus
+Malva sylvestris
+Hypericum perforatum
+Symphytum officinale
+Lythrum salicaria
+Linaria vulgaris
+Convolvulus arvensis
+Geranium robertianum
+Vicia cracca
 
-# --- Birds ---
+# ================================ BIRDS ====================================
 Cardinalis cardinalis
 Cyanocitta cristata
+Turdus migratorius
+Sialia sialis
+Spinus tristis
+Poecile atricapillus
+Cyanistes caeruleus
+Erithacus rubecula
+Carduelis carduelis
+Pica pica
+Fringilla coelebs
+
+# =============================== MAMMALS ===================================
+Sciurus carolinensis
+Sciurus vulgaris
+Tamias striatus
+Marmota monax
+Oryctolagus cuniculus
+Vulpes vulpes
+
+# =========================== MARINE INVERTEBRATES ==========================
+Asterias rubens
+Pisaster ochraceus
+Carcinus maenas
+Pagurus bernhardus
