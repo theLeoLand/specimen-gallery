@@ -1,8 +1,34 @@
 <div class="w-full max-w-2xl mx-auto pt-4 md:pt-0"
      data-controller="image-resize"
      <% if @specimen_asset.image.attached? %>data-image-resize-url-value="<%= rails_storage_proxy_path(@specimen_asset.image) %>"<% end %>>
-  <div class="mb-6">
+  <div class="mb-6 flex items-center justify-between gap-3">
     <%= link_to "← Back to queue", admin_specimen_assets_path, class: "text-sm text-stone-500 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-500" %>
+
+    <div class="flex items-center gap-2">
+      <% if @prev_specimen %>
+        <%= link_to edit_admin_specimen_asset_path(@prev_specimen),
+          class: "px-3 py-1.5 text-sm font-medium bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 text-stone-700 dark:text-stone-300 rounded-lg hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors" do %>
+          ← Prev
+        <% end %>
+      <% else %>
+        <span class="px-3 py-1.5 text-sm font-medium border border-stone-200 dark:border-stone-700 text-stone-300 dark:text-stone-600 rounded-lg cursor-not-allowed">← Prev</span>
+      <% end %>
+
+      <% if @queue_position && @queue_total %>
+        <span class="text-xs text-stone-500 dark:text-stone-400 tabular-nums whitespace-nowrap px-1">
+          <%= @queue_position %> of <%= @queue_total %> <span class="text-stone-400 dark:text-stone-500">(<%= @specimen_asset.status %>)</span>
+        </span>
+      <% end %>
+
+      <% if @next_specimen %>
+        <%= link_to edit_admin_specimen_asset_path(@next_specimen),
+          class: "px-3 py-1.5 text-sm font-medium bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 text-stone-700 dark:text-stone-300 rounded-lg hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors" do %>
+          Next →
+        <% end %>
+      <% else %>
+        <span class="px-3 py-1.5 text-sm font-medium border border-stone-200 dark:border-stone-700 text-stone-300 dark:text-stone-600 rounded-lg cursor-not-allowed">Next →</span>
+      <% end %>
+    </div>
   </div>
 
   <h1 class="font-serif text-3xl text-stone-900 dark:text-stone-100 mb-2">Edit Specimen</h1>

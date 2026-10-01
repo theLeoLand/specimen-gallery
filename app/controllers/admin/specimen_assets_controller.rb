@@ -39,6 +39,7 @@ module Admin
 
     def edit
       @specimen_asset = SpecimenAsset.find(params[:id])
+      load_queue_neighbors
     end
 
     def update
@@ -75,6 +76,32 @@ module Admin
     end
 
     private
+
+    # Prev/Next navigation within the same status queue, matching the index order
+    # (created_at desc). id is a stable tiebreaker because batch imports share
+    # near-identical timestamps.
+    def load_queue_neighbors
+      scope = SpecimenAsset.where(status: @specimen_asset.status)
+      created = @specimen_asset.created_at
+      id = @specimen_asset.id
+
+      # "Next" = further down the newest-first list (older).
+      @next_specimen = scope
+        .where("specimen_assets.created_at < :c OR (specimen_assets.created_at = :c AND specimen_assets.id < :id)", c: created, id: id)
+        .order(created_at: :desc, id: :desc)
+        .first
+
+      # "Previous" = higher up the list (newer).
+      @prev_specimen = scope
+        .where("specimen_assets.created_at > :c OR (specimen_assets.created_at = :c AND specimen_assets.id > :id)", c: created, id: id)
+        .order(created_at: :asc, id: :asc)
+        .first
+
+      @queue_total = scope.count
+      @queue_position = @queue_total - scope
+        .where("specimen_assets.created_at < :c OR (specimen_assets.created_at = :c AND specimen_assets.id < :id)", c: created, id: id)
+        .count
+    end
 
     def handle_status_update
       new_status = params[:status]
