@@ -57,8 +57,14 @@ module Admin
 
     def destroy
       @specimen_asset = SpecimenAsset.find(params[:id])
+      nxt = next_queue_item(@specimen_asset) if params[:next].present?
       @specimen_asset.destroy
-      redirect_to admin_specimen_assets_path, notice: "Specimen deleted."
+
+      if nxt
+        redirect_to edit_admin_specimen_asset_path(nxt), notice: "Specimen rejected. Next up →"
+      else
+        redirect_to admin_specimen_assets_path, notice: params[:next].present? ? "Specimen rejected. Queue clear." : "Specimen deleted."
+      end
     end
 
     def unpublish
@@ -103,6 +109,24 @@ module Admin
         .count
     end
 
+    # The specimen the admin would review next after acting on this one: the next
+    # item down the newest-first queue (older), falling back to the previous
+    # (newer) one if we're at the end. Scoped to the current status queue.
+    def next_queue_item(asset)
+      scope = SpecimenAsset.where(status: asset.status).where.not(id: asset.id)
+      created = asset.created_at
+      id = asset.id
+
+      scope
+        .where("specimen_assets.created_at < :c OR (specimen_assets.created_at = :c AND specimen_assets.id < :id)", c: created, id: id)
+        .order(created_at: :desc, id: :desc)
+        .first ||
+        scope
+          .where("specimen_assets.created_at > :c OR (specimen_assets.created_at = :c AND specimen_assets.id > :id)", c: created, id: id)
+          .order(created_at: :asc, id: :asc)
+          .first
+    end
+
     def handle_status_update
       new_status = params[:status]
 
@@ -111,9 +135,17 @@ module Admin
         return
       end
 
+      # Compute the next item before the status change removes it from this queue.
+      nxt = next_queue_item(@specimen_asset) if params[:next].present?
+
       if @specimen_asset.update(status: new_status)
-        redirect_back fallback_location: admin_specimen_assets_path,
-                      notice: "Specimen #{new_status}."
+        if nxt
+          redirect_to edit_admin_specimen_asset_path(nxt), notice: "Specimen #{new_status}. Next up →"
+        elsif params[:next].present?
+          redirect_to admin_specimen_assets_path, notice: "Specimen #{new_status}. Queue clear."
+        else
+          redirect_back fallback_location: admin_specimen_assets_path, notice: "Specimen #{new_status}."
+        end
       else
         redirect_back fallback_location: admin_specimen_assets_path,
                       alert: "Failed to update: #{@specimen_asset.errors.full_messages.join(', ')}"
@@ -162,7 +194,7 @@ module Admin
       end
 
       if @specimen_asset.save
-        redirect_to admin_specimen_assets_path, notice: "Specimen updated successfully."
+        redirect_to edit_admin_specimen_asset_path(@specimen_asset), notice: "Saved."
       else
         render :edit, status: :unprocessable_entity
       end
