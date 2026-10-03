@@ -9,7 +9,7 @@
 
   <!-- Filter tabs -->
   <div class="flex items-center gap-1 mb-6 border-b border-stone-200 dark:border-stone-700">
-    <%= link_to admin_specimen_assets_path(filter: "pending"),
+    <%= link_to admin_specimen_assets_path(filter: "pending", q: params[:q], queue: @queue),
       class: "px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors #{@filter == 'pending' ? 'border-amber-500 text-amber-600 dark:text-amber-400' : 'border-transparent text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300'}" do %>
       Pending
       <span class="ml-1.5 px-2 py-0.5 rounded-full text-xs <%= @pending_count > 0 ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300' : 'bg-stone-100 dark:bg-stone-700 text-stone-500 dark:text-stone-400' %>">
@@ -17,7 +17,7 @@
       </span>
     <% end %>
     
-    <%= link_to admin_specimen_assets_path(filter: "approved"),
+    <%= link_to admin_specimen_assets_path(filter: "approved", q: params[:q], queue: @queue),
       class: "px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors #{@filter == 'approved' ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : 'border-transparent text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300'}" do %>
       Live
       <span class="ml-1.5 px-2 py-0.5 rounded-full text-xs bg-stone-100 dark:bg-stone-700 text-stone-500 dark:text-stone-400">
@@ -34,10 +34,50 @@
     <% end %>
   </div>
 
-  <!-- Search bar -->
-  <div class="mb-6">
-    <%= form_with url: admin_specimen_assets_path, method: :get, class: "flex gap-2" do |f| %>
+  <!-- Search + filter -->
+  <% queue_label = { "review" => "Needs review", "ready" => "Ready" }[@queue] || "All" %>
+  <% approvable = @visible_count if @filter == "pending" %>
+  <div class="mb-6 flex items-center gap-2">
+    <details class="relative shrink-0">
+      <summary class="list-none cursor-pointer select-none px-3 py-2 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 text-stone-700 dark:text-stone-300 text-sm rounded-full hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors flex items-center gap-1.5 [&::-webkit-details-marker]:hidden">
+        <span class="text-stone-400 dark:text-stone-500">Filter</span>
+        <span class="font-medium"><%= queue_label %></span>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+      </summary>
+      <div class="absolute left-0 mt-2 w-56 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl shadow-lg z-30 py-1">
+        <% [
+          ["all", "All"],
+          ["review", "Needs review"],
+          ["ready", "Ready"]
+        ].each do |value, label| %>
+          <%= link_to admin_specimen_assets_path(filter: @filter, q: params[:q], queue: value),
+            class: "flex items-center justify-between px-3 py-2 text-sm #{@queue == value ? 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20' : 'text-stone-700 dark:text-stone-200 hover:bg-stone-50 dark:hover:bg-stone-700'} transition-colors" do %>
+            <span><%= label %></span>
+            <span class="text-xs text-stone-400 tabular-nums"><%= @queue_counts[value] %></span>
+          <% end %>
+        <% end %>
+
+        <% if @filter == "pending" %>
+          <div class="my-1 border-t border-stone-200 dark:border-stone-700"></div>
+          <% if approvable.to_i.positive? %>
+            <%= button_to approve_all_admin_specimen_assets_path(q: params[:q], queue: @queue),
+              method: :patch,
+              form_class: "w-full",
+              data: { turbo_confirm: "Approve #{approvable} #{queue_label.downcase} specimen#{'s' unless approvable == 1}? They'll go live immediately." },
+              class: "w-full flex items-center justify-between px-3 py-2 text-left text-sm text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors" do %>
+              <span>Approve all</span>
+              <span class="text-xs tabular-nums"><%= approvable %></span>
+            <% end %>
+          <% else %>
+            <p class="px-3 py-2 text-sm text-stone-400 dark:text-stone-500">Nothing to approve</p>
+          <% end %>
+        <% end %>
+      </div>
+    </details>
+
+    <%= form_with url: admin_specimen_assets_path, method: :get, class: "flex gap-2 flex-grow" do |f| %>
       <%= hidden_field_tag :filter, @filter %>
+      <%= hidden_field_tag :queue, @queue %>
       <div class="relative flex-grow">
         <%= text_field_tag :q, params[:q],
           placeholder: "Search by name, region, morph...",
@@ -50,14 +90,17 @@
       </div>
       <%= f.submit "Search", class: "px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-full hover:bg-amber-700 cursor-pointer" %>
       <% if params[:q].present? %>
-        <%= link_to "Clear", admin_specimen_assets_path(filter: @filter), class: "px-4 py-2 text-sm text-stone-500 hover:text-amber-600" %>
+        <%= link_to "Clear", admin_specimen_assets_path(filter: @filter, queue: @queue), class: "px-4 py-2 text-sm text-stone-500 hover:text-amber-600" %>
       <% end %>
     <% end %>
   </div>
 
-  <% if params[:q].present? %>
+  <% if params[:q].present? || @queue != "all" %>
     <p class="text-sm text-stone-500 dark:text-stone-400 mb-4">
-      <%= @specimen_assets.count %> result(s) for "<%= params[:q] %>"
+      <%= @visible_count %>
+      <%= "result".pluralize(@visible_count) %>
+      <% if params[:q].present? %>for "<%= params[:q] %>"<% end %>
+      <% if @queue != "all" %>· <%= queue_label.downcase %><% end %>
     </p>
   <% end %>
 

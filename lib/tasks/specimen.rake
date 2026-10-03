@@ -83,6 +83,28 @@ namespace :specimen do
 
     log.call("Batch done. #{format_stats(stats)}")
   end
+
+  # Rename existing image blobs to SEO-friendly filenames (one-time backfill).
+  #   bin/rails specimen:backfill_filenames
+  task backfill_filenames: :environment do
+    renamed = 0
+    skipped = 0
+    SpecimenAsset.includes(image_attachment: :blob).find_each do |asset|
+      next unless asset.image.attached?
+
+      before = asset.image.blob.filename.to_s
+      asset.apply_descriptive_filename!
+      after = asset.image.blob.reload.filename.to_s
+
+      if before != after
+        renamed += 1
+        puts "[backfill] ##{asset.id}: #{before} -> #{after}"
+      else
+        skipped += 1
+      end
+    end
+    puts "[backfill] done. renamed=#{renamed} unchanged=#{skipped}"
+  end
 end
 
 # --- core ingestion ----------------------------------------------------------
@@ -158,6 +180,7 @@ def ingest_taxon(taxon_name, limit:, photo_size:, publish:, dry_run:, download_d
       )
 
       if asset.save
+        asset.apply_descriptive_filename! # SEO-friendly image/download filename
         qc_note = qc.flag? ? ", qc:#{qc.reasons.join('/')}" : ""
         log.call("#{prefix} created ##{asset.id} — #{photo.scientific_name} " \
                  "[#{asset.status}#{needs_review ? ', needs_review' : ''}#{qc_note}]")

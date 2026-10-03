@@ -6,7 +6,11 @@
 <% content_for(:og_title) { "#{full_name} – CC0 Transparent PNG" } %>
 <% content_for(:og_description) { "Free CC0 transparent background cutout of #{display}. Public domain specimen image for research, visualization, and illustration." } %>
 <% if @specimen_asset.image.attached? %>
-  <% content_for(:og_image) { url_for(@specimen_asset.image) } %>
+  <% content_for(:og_image) { specimen_image_url_abs(@specimen_asset) } %>
+  <% content_for(:og_type) { "article" } %>
+  <% content_for(:head) do %>
+    <%= json_ld_tag(specimen_image_jsonld(@specimen_asset)) %>
+  <% end %>
 <% end %>
 
 <div class="max-w-4xl mx-auto">

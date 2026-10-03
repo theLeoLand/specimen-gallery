@@ -36,6 +36,9 @@ Rails.application.routes.draw do
       member do
         patch :unpublish
       end
+      collection do
+        patch :approve_all
+      end
     end
     resources :flags, only: %i[index] do
       member do

@@ -42,6 +42,25 @@ class SpecimenAsset < ApplicationRecord
     "SG-#{id.to_s.rjust(5, '0')}"
   end
 
+  # SEO-friendly filename for the image blob, used for both the download name and
+  # the URL's filename segment, e.g. "monarch-butterfly-danaus-plexippus-cc0.png".
+  def download_filename
+    base = [ display_name, (scientific_name if scientific_name.present? && scientific_name != display_name) ]
+      .compact.join(" ")
+    slug = base.parameterize.presence || "specimen-#{id}"
+    suffix = license == "CC0" ? "cc0" : "cc-by"
+    "#{slug}-#{suffix}.png"
+  end
+
+  # Rename the attached blob's filename (metadata only; storage key is unchanged)
+  # so downloads and image URLs are descriptive. Safe to call repeatedly.
+  def apply_descriptive_filename!
+    return unless image.attached?
+
+    desired = download_filename
+    image.blob.update(filename: desired) if image.blob.filename.to_s != desired
+  end
+
   # Whether this specimen has a verified scientific/taxonomic name
   def has_verified_taxonomy?
     taxon&.gbif_key.present?

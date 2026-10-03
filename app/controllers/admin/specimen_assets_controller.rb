@@ -4,33 +4,22 @@ module Admin
     include AdminAuth
 
     ALLOWED_STATUSES = %w[approved rejected pending].freeze
+    QUEUE_VIEWS = %w[all review ready].freeze
 
     def index
       @filter = params[:filter] || "pending"
+      @queue = QUEUE_VIEWS.include?(params[:queue]) ? params[:queue] : "all"
 
-      @specimen_assets = case @filter
-      when "approved"
-        SpecimenAsset.where(status: "approved")
-      when "all"
-        SpecimenAsset.all
-      else
-        SpecimenAsset.where(status: "pending")
-      end
+      @specimen_assets = admin_asset_scope(status_filter: @filter, queue: @queue)
+        .order(created_at: :desc)
+      @visible_count = admin_asset_scope(status_filter: @filter, queue: @queue).distinct.count(:id)
 
-      # Apply search if provided
-      if params[:q].present?
-        search_term = "%#{params[:q]}%"
-        @specimen_assets = @specimen_assets
-          .left_joins(:taxon)
-          .where(
-            "specimen_assets.specimen_name ILIKE :q OR specimen_assets.common_name ILIKE :q OR " \
-            "specimen_assets.morph ILIKE :q OR specimen_assets.region ILIKE :q OR " \
-            "taxa.scientific_name ILIKE :q",
-            q: search_term
-          )
-      end
-
-      @specimen_assets = @specimen_assets.order(created_at: :desc)
+      counted = admin_asset_scope(status_filter: @filter, queue: "all")
+      @queue_counts = {
+        "all" => counted.distinct.count(:id),
+        "review" => counted.where(needs_review: true).distinct.count(:id),
+        "ready" => counted.where(needs_review: [ false, nil ]).distinct.count(:id)
+      }
 
       @pending_count = SpecimenAsset.where(status: "pending").count
       @approved_count = SpecimenAsset.where(status: "approved").count
@@ -67,6 +56,17 @@ module Admin
       end
     end
 
+    def approve_all
+      queue = QUEUE_VIEWS.include?(params[:queue]) ? params[:queue] : "all"
+      scope = admin_asset_scope(status_filter: "pending", queue: queue)
+
+      # Resolve ids first — update_all can't run with a join in Postgres.
+      count = SpecimenAsset.where(id: scope.pluck(:id)).update_all(status: "approved", updated_at: Time.current)
+
+      redirect_to admin_specimen_assets_path(filter: "pending", q: params[:q], queue: queue),
+                  notice: count.positive? ? "Approved #{count} specimen#{'s' unless count == 1}." : "No matching specimens to approve."
+    end
+
     def unpublish
       @specimen_asset = SpecimenAsset.find(params[:id])
 
@@ -82,6 +82,34 @@ module Admin
     end
 
     private
+
+    def admin_asset_scope(status_filter:, queue: "all")
+      scope = case status_filter
+      when "approved" then SpecimenAsset.where(status: "approved")
+      when "all" then SpecimenAsset.all
+      else SpecimenAsset.where(status: "pending")
+      end
+
+      scope = apply_admin_search(scope)
+
+      case queue
+      when "review" then scope.where(needs_review: true)
+      when "ready" then scope.where(needs_review: [ false, nil ])
+      else scope
+      end
+    end
+
+    def apply_admin_search(scope)
+      return scope if params[:q].blank?
+
+      term = "%#{params[:q]}%"
+      scope.left_joins(:taxon).where(
+        "specimen_assets.specimen_name ILIKE :q OR specimen_assets.common_name ILIKE :q OR " \
+        "specimen_assets.morph ILIKE :q OR specimen_assets.region ILIKE :q OR " \
+        "taxa.scientific_name ILIKE :q",
+        q: term
+      )
+    end
 
     # Prev/Next navigation within the same status queue, matching the index order
     # (created_at desc). id is a stable tiebreaker because batch imports share
@@ -194,6 +222,7 @@ module Admin
       end
 
       if @specimen_asset.save
+        @specimen_asset.apply_descriptive_filename! # keep image/download filename SEO-friendly
         redirect_to edit_admin_specimen_asset_path(@specimen_asset), notice: "Saved."
       else
         render :edit, status: :unprocessable_entity

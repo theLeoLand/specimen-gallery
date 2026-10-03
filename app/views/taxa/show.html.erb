@@ -1,5 +1,14 @@
 <% content_for(:title) { "#{@taxon.scientific_name} — Specimen Gallery" } %>
 <% content_for(:meta_description) { "Browse free CC0 transparent-background cutouts of #{@taxon.scientific_name}. #{pluralize(@specimen_assets.count, "image")} available for download as PNG." } %>
+<% first_with_image = @specimen_assets.find { |s| s.image.attached? } %>
+<% if first_with_image %>
+  <% content_for(:og_image) { specimen_image_url_abs(first_with_image) } %>
+<% end %>
+<% if @specimen_assets.any? %>
+  <% content_for(:head) do %>
+    <%= json_ld_tag(taxon_collection_jsonld(@taxon, @specimen_assets)) %>
+  <% end %>
+<% end %>
 
 <div class="w-full">
   <%= link_to "← Back to Gallery", browse_path(id_status: @id_status_filter), class: "inline-block text-sm text-stone-600 dark:text-stone-400 hover:text-amber-700 dark:hover:text-amber-500 mb-8 transition-colors" %>
