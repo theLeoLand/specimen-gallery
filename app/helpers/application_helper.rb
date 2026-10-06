@@ -103,4 +103,29 @@ module ApplicationHelper
     json = data.to_json.gsub("<", '\u003c').gsub(">", '\u003e').gsub("&", '\u0026')
     content_tag(:script, json.html_safe, type: "application/ld+json")
   end
+
+  # Preserve browse filters when paging. Compact so blank filters don't pollute URLs.
+  def browse_query_params(overrides = {})
+    {
+      q: params[:q].presence,
+      group: params[:group].presence,
+      id_status: params[:id_status].presence,
+      sex: params[:sex].presence,
+      life_stage: params[:life_stage].presence,
+      view: params[:view].presence,
+      part: params[:part].presence
+    }.merge(overrides).compact
+  end
+
+  # Page numbers with ellipsis gaps, e.g. [1, :gap, 4, 5, 6, :gap, 12]
+  def pagination_pages(current, total, window: 2)
+    return [] if total <= 1
+
+    keep = [ 1, total ]
+    ((current - window)..(current + window)).each { |p| keep << p if p.between?(1, total) }
+    keep.uniq.sort.each_with_object([]) do |p, acc|
+      acc << :gap if acc.last.is_a?(Integer) && p > acc.last + 1
+      acc << p
+    end
+  end
 end

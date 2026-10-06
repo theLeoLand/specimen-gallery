@@ -1,5 +1,8 @@
 # app/controllers/taxa_controller.rb
 class TaxaController < ApplicationController
+  # 5-across grid × 26 rows. Extra pages appear only after the gallery outgrows this.
+  BROWSE_PER_PAGE = 130
+
   def index
     # ID status filter: default to "all" to show gallery liveliness
     @id_status_filter = params[:id_status].presence || "all"
@@ -51,6 +54,9 @@ class TaxaController < ApplicationController
     end
 
     @taxa = @taxa.order(:scientific_name)
+    @gallery_species_count = Taxon.with_approved_assets.count
+    @gallery_image_count = SpecimenAsset.where(status: "approved").count
+    paginate_browse
   end
 
   def show
@@ -82,5 +88,17 @@ class TaxaController < ApplicationController
         rank: s[:rank]
       }
     }
+  end
+
+  private
+
+  def paginate_browse
+    @total_count = @taxa.except(:order).count
+    @total_count = @total_count.size if @total_count.is_a?(Hash)
+    @total_pages = [ (@total_count / BROWSE_PER_PAGE.to_f).ceil, 1 ].max
+    @page = params[:page].to_i
+    @page = 1 if @page < 1
+    @page = @total_pages if @page > @total_pages
+    @taxa = @taxa.offset((@page - 1) * BROWSE_PER_PAGE).limit(BROWSE_PER_PAGE)
   end
 end

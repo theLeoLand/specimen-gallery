@@ -1,5 +1,15 @@
 <% content_for(:title) { "Browse Specimens — Specimen Gallery" } %>
 <% content_for(:meta_description) { "Search and explore free CC0 transparent-background specimen cutouts. Filter by category, ID status, and traits. Download PNGs for illustration and research." } %>
+<% if @page && @total_pages && @total_pages > 1 %>
+  <% content_for(:head) do %>
+    <% if @page > 1 %>
+      <link rel="prev" href="<%= browse_url(browse_query_params(page: @page - 1)) %>">
+    <% end %>
+    <% if @page < @total_pages %>
+      <link rel="next" href="<%= browse_url(browse_query_params(page: @page + 1)) %>">
+    <% end %>
+  <% end %>
+<% end %>
 
 <div class="w-full">
   <div class="text-center mb-8 pt-4 md:pt-0">
@@ -116,17 +126,20 @@
     <% end %>
   </div>
 
-  <!-- Results info -->
-  <% if @current_group.present? || params[:q].present? || @filters&.values&.any?(&:present?) %>
-    <div class="text-center mb-6">
-      <p class="text-sm text-stone-500 dark:text-stone-400">
-        <%= @taxa.count %> <%= "result".pluralize(@taxa.count) %>
-        <% if params[:q].present? %>
-          for "<%= params[:q] %>"
-        <% end %>
-      </p>
-    </div>
-  <% end %>
+  <!-- Gallery totals (always). Search/filter match count only when narrowed. -->
+  <% narrowed = @current_group.present? || params[:q].present? || @filters&.values&.any?(&:present?) || (@id_status_filter.present? && @id_status_filter != "all") %>
+  <div class="text-center mb-6">
+    <p class="text-sm text-stone-500 dark:text-stone-400">
+      <% if narrowed %>
+        <%= @total_count %> <%= "result".pluralize(@total_count) %>
+        <% if params[:q].present? %>for "<%= params[:q] %>"<% end %>
+        ·
+      <% end %>
+      <%= number_with_delimiter(@gallery_species_count) %> <%= "species".pluralize(@gallery_species_count) %>
+      ·
+      <%= number_with_delimiter(@gallery_image_count) %> <%= "image".pluralize(@gallery_image_count) %>
+    </p>
+  </div>
 
   <% if @taxa.any? %>
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
@@ -156,6 +169,11 @@
         <% end %>
       <% end %>
     </div>
+
+    <%= render "shared/pagination",
+      page: @page,
+      total_pages: @total_pages,
+      path_helper: ->(n) { browse_path(browse_query_params(page: (n == 1 ? nil : n))) } %>
   <% else %>
     <div class="text-center py-16">
       <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-stone-100 dark:bg-stone-700 flex items-center justify-center">

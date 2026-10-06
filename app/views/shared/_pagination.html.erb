@@ -1,0 +1,35 @@
+<%# locals: page, total_pages, path_helper (lambda |n| url) %>
+<% if total_pages > 1 %>
+  <nav class="mt-10 flex flex-wrap items-center justify-center gap-1" aria-label="Pagination">
+    <% if page > 1 %>
+      <%= link_to path_helper.call(page - 1),
+        class: "px-3 py-1.5 text-sm font-medium bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 text-stone-700 dark:text-stone-300 rounded-lg hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors",
+        rel: "prev" do %>
+        ← Prev
+      <% end %>
+    <% else %>
+      <span class="px-3 py-1.5 text-sm font-medium border border-stone-200 dark:border-stone-700 text-stone-300 dark:text-stone-600 rounded-lg">← Prev</span>
+    <% end %>
+
+    <% pagination_pages(page, total_pages).each do |p| %>
+      <% if p == :gap %>
+        <span class="px-2 py-1.5 text-sm text-stone-400 dark:text-stone-500">…</span>
+      <% elsif p == page %>
+        <span class="px-3 py-1.5 text-sm font-medium bg-amber-600 text-white rounded-lg tabular-nums" aria-current="page"><%= p %></span>
+      <% else %>
+        <%= link_to p, path_helper.call(p),
+          class: "px-3 py-1.5 text-sm font-medium bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 text-stone-700 dark:text-stone-300 rounded-lg hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors tabular-nums" %>
+      <% end %>
+    <% end %>
+
+    <% if page < total_pages %>
+      <%= link_to path_helper.call(page + 1),
+        class: "px-3 py-1.5 text-sm font-medium bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-600 text-stone-700 dark:text-stone-300 rounded-lg hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors",
+        rel: "next" do %>
+        Next →
+      <% end %>
+    <% else %>
+      <span class="px-3 py-1.5 text-sm font-medium border border-stone-200 dark:border-stone-700 text-stone-300 dark:text-stone-600 rounded-lg">Next →</span>
+    <% end %>
+  </nav>
+<% end %>
