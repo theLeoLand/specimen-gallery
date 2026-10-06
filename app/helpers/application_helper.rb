@@ -19,6 +19,20 @@ module ApplicationHelper
     parts.join(" — ")
   end
 
+  # Grid/thumbnail src. In production this is a direct Tigris URL so the browser
+  # does not send one Rails request per image (that saturates the small Fly
+  # machine and some cards render as alt text). Disk storage keeps the local route.
+  def specimen_image_src(specimen)
+    return unless specimen&.image&.attached?
+
+    blob = specimen.image.blob
+    if blob.service.class.name.demodulize == "S3Service"
+      blob.url(expires_in: 12.hours, disposition: :inline)
+    else
+      url_for(specimen.image)
+    end
+  end
+
   # SEO-friendly, stable, ABSOLUTE URL for a specimen's image on our own domain.
   # Uses rails_blob_url (not Active Storage's url_for, which returns a relative
   # path and breaks og:image/structured-data crawling). The signed_id route is

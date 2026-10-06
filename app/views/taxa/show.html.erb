@@ -42,7 +42,7 @@
           <%= link_to specimen_asset_path(specimen), class: "block" do %>
             <div class="aspect-square bg-gradient-to-br from-stone-100 to-stone-200 dark:from-stone-700 dark:to-stone-600 p-6 relative">
               <% if specimen.image.attached? %>
-                <%= image_tag specimen.image,
+                <%= image_tag specimen_image_src(specimen),
                   alt: specimen_alt_text(specimen, @taxon),
                   loading: "lazy",
                   class: "w-full h-full object-contain" %>
