@@ -128,6 +128,7 @@ def ingest_taxon(taxon_name, limit:, photo_size:, publish:, dry_run:, download_d
 
   photos.each_with_index do |photo, i|
     prefix = "(#{i + 1}/#{photos.size})"
+    ensure_db_connection! # Neon drops idle sockets during long rembg / laptop sleep
 
     if already_imported?(photo.photo_id)
       log.call("#{prefix} skip — already imported iNat photo ##{photo.photo_id}")
@@ -146,6 +147,7 @@ def ingest_taxon(taxon_name, limit:, photo_size:, publish:, dry_run:, download_d
       end
 
       cutout = BirefnetBackgroundRemover.call(src.path)
+      ensure_db_connection! # rembg can take long enough for Neon to close the socket
 
       # Automated QC gate: auto-skip clear failures, flag suspicious ones.
       qc = CutoutQualityChecker.call(cutout)
@@ -266,9 +268,45 @@ end
 
 # --- shared helpers ----------------------------------------------------------
 
+# Neon (and sleeping laptops) will kill idle Postgres sockets mid-batch.
+# Verify/reconnect before the next DB hit so one drop doesn't abort the run.
+def ensure_db_connection!
+  ActiveRecord::Base.connection.verify!
+rescue ActiveRecord::ConnectionNotEstablished, ActiveRecord::ConnectionFailed, PG::Error
+  puts "[specimen] db connection dropped, reconnecting..."
+  ActiveRecord::Base.connection_handler.clear_active_connections!
+  ActiveRecord::Base.establish_connection
+  ActiveRecord::Base.connection.verify!
+end
+
 def already_imported?(photo_id)
   return false if photo_id.blank?
-  SpecimenAsset.where("qc_flags ->> 'inat_photo_id' = ?", photo_id.to_s).exists?
+  with_db { SpecimenAsset.where("qc_flags ->> 'inat_photo_id' = ?", photo_id.to_s).exists? }
+end
+
+def with_db
+  attempts = 0
+  begin
+    ensure_db_connection!
+    yield
+  rescue ActiveRecord::ConnectionFailed, ActiveRecord::ConnectionNotEstablished, ActiveRecord::StatementInvalid, PG::Error => e
+    attempts += 1
+    raise if attempts > 2 || !db_connection_error?(e)
+    puts "[specimen] db query failed (#{e.class}), retrying (#{attempts}/2)..."
+    ActiveRecord::Base.connection_handler.clear_active_connections!
+    sleep 1
+    retry
+  end
+end
+
+def db_connection_error?(error)
+  current = error
+  while current
+    return true if current.is_a?(PG::ConnectionBad) || current.is_a?(PG::UnableToSend)
+    return true if current.message.match?(/server closed the connection|connection not open|no connection to the server|SSL SYSCALL|could not connect/i)
+    current = current.cause
+  end
+  false
 end
 
 def download_image(url)
