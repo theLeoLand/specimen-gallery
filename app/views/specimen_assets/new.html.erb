@@ -67,25 +67,16 @@
         <svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>
-        Add more details (common name, category, traits…)
+        Add more details (category, traits…)
       </summary>
 
       <div class="mt-4 space-y-4 p-4 bg-stone-50 dark:bg-stone-800/50 rounded-xl border border-stone-200 dark:border-stone-700">
-        <!-- Common name + Category -->
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <%= f.label :common_name, class: "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" %>
-            <%= f.text_field :common_name,
-              placeholder: "e.g., Honey Bee",
-              class: "w-full px-3 py-2 bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg text-stone-800 dark:text-stone-200 placeholder:text-stone-400 text-sm" %>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">Category</label>
-            <%= select_tag "specimen_asset[group]",
-              options_for_select(TaxonGroupResolver.all_with_metadata.map { |g| ["#{g[:icon]} #{g[:name]}", g[:value]] }),
-              include_blank: "Auto-detect",
-              class: "w-full px-3 py-2 bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg text-stone-800 dark:text-stone-200 text-sm" %>
-          </div>
+        <div>
+          <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">Category</label>
+          <%= select_tag "specimen_asset[group]",
+            options_for_select(TaxonGroupResolver.all_with_metadata.map { |g| ["#{g[:icon]} #{g[:name]}", g[:value]] }),
+            include_blank: "Auto-detect",
+            class: "w-full px-3 py-2 bg-white dark:bg-stone-700 border border-stone-300 dark:border-stone-600 rounded-lg text-stone-800 dark:text-stone-200 text-sm" %>
         </div>
 
         <!-- Sex + Life Stage -->
