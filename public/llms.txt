@@ -1,0 +1,27 @@
+# Specimen Gallery
+
+> CC0 transparent-background cutouts of natural specimens. Free to use, including for AI, research, and illustration.
+
+Specimen Gallery (https://specimen.gallery) is a public gallery of natural-history specimen images with the background removed. Each image is a PNG. Most are CC0 (public domain). A few are CC-BY and say so on the page.
+
+## How to cite a specimen
+
+Each specimen has its own page:
+
+- https://specimen.gallery/specimen_assets/{id}
+
+That page is the source of truth for that upload. It shows the display name, scientific name, common name, trait chips (sex, life stage, view, part, morph, region), and license. The same fields are in the page's schema.org ImageObject (name, about, additionalProperty, license, contentUrl).
+
+Use the page URL as the citation. The PNG is the Download link on that page. CC0 images can be reused without permission. CC-BY images need the attribution shown on the page.
+
+## Species
+
+All cutouts of one species are grouped at:
+
+- https://specimen.gallery/taxa/{id}
+
+Browse the gallery at https://specimen.gallery/browse.
+
+## Index
+
+The full list of public pages is https://specimen.gallery/sitemap.xml.

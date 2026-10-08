@@ -2,9 +2,9 @@
 <% display = @specimen_asset.display_name %>
 <% full_name = scientific.present? && scientific != display ? "#{display} (#{scientific})" : display %>
 <% content_for(:title) { "#{full_name} – CC0 Transparent PNG | Specimen Gallery" } %>
-<% content_for(:meta_description) { "Free CC0 transparent background cutout of #{display}. Public domain specimen image for research, visualization, and illustration." } %>
+<% content_for(:meta_description) { specimen_meta_description(@specimen_asset) } %>
 <% content_for(:og_title) { "#{full_name} – CC0 Transparent PNG" } %>
-<% content_for(:og_description) { "Free CC0 transparent background cutout of #{display}. Public domain specimen image for research, visualization, and illustration." } %>
+<% content_for(:og_description) { specimen_meta_description(@specimen_asset) } %>
 <% if @specimen_asset.image.attached? %>
   <% content_for(:og_image) { specimen_image_url_abs(@specimen_asset) } %>
   <% content_for(:og_type) { "article" } %>

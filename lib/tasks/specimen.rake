@@ -17,7 +17,7 @@
 #
 # Batch examples (picks the fewest-imported species first, so coverage spreads):
 #   DRY_RUN=1 bin/rails specimen:ingest_batch
-#   bin/rails specimen:ingest_batch                     # 10 species x 5 each (50)
+#   bin/rails specimen:ingest_batch                     # 20 species x 5 each (100)
 #   PER_SPECIES=8 SPECIES_PER_RUN=5 bin/rails specimen:ingest_batch
 #
 # Options (ENV):
@@ -25,7 +25,7 @@
 #   LIMIT           (ingest only) max photos to ingest (default 25)
 #   SPECIES_FILE    (batch) path to the species list (default config/ingest_species.txt)
 #   PER_SPECIES     (batch) photos per species this run (default 5)
-#   SPECIES_PER_RUN (batch) how many species to process this run (default 10)
+#   SPECIES_PER_RUN (batch) how many species to process this run (default 20)
 #   PHOTO_SIZE      iNat size: medium | large | original (default large)
 #   PUBLISH         "1" to auto-publish good GBIF matches (default: review queue)
 #   DRY_RUN         "1" to only list candidates
@@ -57,7 +57,7 @@ namespace :specimen do
   task ingest_batch: :environment do
     species_file    = ENV["SPECIES_FILE"].presence || Rails.root.join("config/ingest_species.txt").to_s
     per_species     = (ENV["PER_SPECIES"] || 5).to_i
-    species_per_run = (ENV["SPECIES_PER_RUN"] || 10).to_i
+    species_per_run = (ENV["SPECIES_PER_RUN"] || 20).to_i
 
     opts = ingest_opts(default_limit: per_species)
     opts[:limit] = per_species # per-species cap for a batch run

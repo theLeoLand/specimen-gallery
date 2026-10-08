@@ -53,6 +53,21 @@ module ApplicationHelper
     specimen.license == "CC0" ? CC0_LICENSE_URL : CC_BY_LICENSE_URL
   end
 
+  # Invisible description built from the fields already stored on the specimen.
+  # Used in <meta> and JSON-LD only — not rendered again on the page.
+  def specimen_meta_description(specimen)
+    scientific = specimen.taxon&.scientific_name
+    name = specimen.display_name
+    title = scientific.present? && scientific != name ? "#{name} (#{scientific})" : name
+    group = TaxonGroupResolver.display_name(specimen.taxon&.group).presence
+    group = nil if group == "Unknown" || group == "Other"
+
+    traits = specimen.trait_chips.map { |chip| chip[:label].to_s }.presence
+    license = specimen.license == "CC0" ? "CC0 transparent PNG, free to use" : "CC-BY transparent PNG"
+
+    [ title, group, traits&.join(", "), license ].compact.join(". ").concat(".")
+  end
+
   # schema.org ImageObject for a single specimen. The `license` +
   # `acquireLicensePage` pair is what powers Google Images' usage-rights
   # ("free to use") filter — the key channel for a CC0 cutout library.
@@ -64,7 +79,8 @@ module ApplicationHelper
       "@context" => "https://schema.org",
       "@type" => "ImageObject",
       "name" => specimen_alt_text(specimen),
-      "description" => "Free #{specimen.license == 'CC0' ? 'public domain (CC0)' : 'CC-BY'} transparent-background cutout of #{specimen.display_name}.",
+      "description" => specimen_meta_description(specimen),
+      "identifier" => specimen.specimen_id,
       "contentUrl" => img,
       "thumbnailUrl" => img,
       "url" => specimen_asset_url(specimen),
@@ -81,8 +97,17 @@ module ApplicationHelper
     if scientific.present?
       about = { "@type" => "Taxon", "name" => scientific }
       about["alternateName"] = specimen.common_name if specimen.common_name.present?
+      group = TaxonGroupResolver.display_name(specimen.taxon&.group)
+      about["additionalType"] = group if group.present? && !group.in?(%w[Unknown Other])
       data["about"] = about
     end
+
+    traits = specimen.trait_chips.filter_map do |chip|
+      next if chip[:label].blank?
+
+      { "@type" => "PropertyValue", "name" => chip[:type].to_s.humanize, "value" => chip[:label] }
+    end
+    data["additionalProperty"] = traits if traits.any?
 
     if specimen.attribution_name.present?
       creator = { "@type" => "Person", "name" => specimen.attribution_name }

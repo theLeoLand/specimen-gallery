@@ -10,7 +10,7 @@
 #   bin/ingest "Danaus plexippus" 10 --dry-run    # preview only (no downloads/writes)
 #   bin/ingest "Danaus plexippus" 5  --prod       # LIVE site (needs .env.ingest)
 #
-# Batch (rotating pool from config/ingest_species.txt — 10 species x 5 each = 50):
+# Batch (rotating pool from config/ingest_species.txt — 20 species x 5 each = 100):
 #   bin/ingest --batch --dry-run                  # preview the batch
 #   bin/ingest --batch                            # into DEV
 #   bin/ingest --batch --prod                     # into the LIVE site
