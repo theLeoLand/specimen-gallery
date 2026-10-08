@@ -52,7 +52,7 @@
             <%= @specimen_asset.taxon.scientific_name %>
           </p>
         <% end %>
-        <% if @specimen_asset.common_name.present? %>
+        <% if @specimen_asset.common_name.present? && !@specimen_asset.common_name.casecmp?(@specimen_asset.display_name) %>
           <p class="text-stone-500 dark:text-stone-400"><%= @specimen_asset.common_name %></p>
         <% end %>
       </div>
