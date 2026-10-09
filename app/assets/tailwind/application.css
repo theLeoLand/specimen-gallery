@@ -7,3 +7,22 @@
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
 }
+
+/* Landing page only: each cutout drifts a few pixels, out of phase with its neighbors. */
+@keyframes specimen-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.specimen-float {
+  animation: specimen-float 7.5s ease-in-out infinite;
+}
+
+.home-grid > a:nth-child(5n+2) .specimen-float { animation-delay: -1.5s; }
+.home-grid > a:nth-child(5n+3) .specimen-float { animation-delay: -3s; }
+.home-grid > a:nth-child(5n+4) .specimen-float { animation-delay: -4.5s; }
+.home-grid > a:nth-child(5n+5) .specimen-float { animation-delay: -6s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .specimen-float { animation: none; }
+}
