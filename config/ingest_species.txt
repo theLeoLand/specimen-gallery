@@ -3,8 +3,10 @@
 # Species pool for `bin/ingest --batch` (and the future scheduled job).
 # One scientific name per line. Lines starting with # and blank lines are ignored.
 #
-# Each batch run picks the species with the FEWEST imported specimens first, so
-# coverage spreads across this list over time instead of drying up one species.
+# Each batch run finishes species that have never been imported before it repeats
+# any. Only after every name on this list has at least one specimen do we circle
+# back, and then we take the ones with the fewest imports. The same iNat photo
+# or observation is never uploaded twice.
 # The list is intentionally broad and skewed toward species that (a) have lots of
 # research-grade CC0 photos on iNaturalist and (b) make clean single-subject
 # cutouts (bold, high-contrast subjects). Add/remove freely.
@@ -61,6 +63,20 @@ Speyeria aphrodite
 Nymphalis polychloros
 Lycaena virgaureae
 Chlosyne nycteis
+Euptoieta claudia
+Limenitis reducta
+Apatura iris
+Boloria selene
+Melitaea cinxia
+Epargyreus clarus
+Zerene cesonia
+Nathalis iole
+Polygonia faunus
+Nymphalis californica
+Vanessa annabella
+Satyrium calanus
+Papilio canadensis
+Hesperia comma
 
 # --- Moths ---
 Actias luna
@@ -95,6 +111,20 @@ Catocala relicta
 Hypercompe scribonia
 Agrius convolvuli
 Actias selene
+Autographa gamma
+Noctua pronuba
+Ceratomia undulosa
+Paonias excaecatus
+Hyalophora euryalus
+Citheronia regalis
+Eumorpha pandorus
+Darapsa myron
+Hemaris fuciformis
+Arctia villica
+Spilosoma lutea
+Orgyia antiqua
+Lophocampa caryae
+Hyalophora columbia
 
 # --- Beetles ---
 Coccinella septempunctata
@@ -128,6 +158,20 @@ Dynastes granti
 Photuris pensylvanica
 Cicindela formosa
 Buprestis aurulenta
+Coccinella novemnotata
+Chrysochus auratus
+Chalcophora virginiensis
+Strategus aloeus
+Xyloryctes jamaicensis
+Osmoderma eremita
+Protaetia cuprea
+Cicindela oregona
+Calosoma sycophanta
+Pyrochroa coccinea
+Rhagonycha fulva
+Dicerca divaricata
+Calligrapha philadelphica
+Cantharis rustica
 
 # --- Bees, wasps & ants ---
 Apis mellifera
@@ -160,6 +204,20 @@ Vespa velutina
 Sphex pensylvanicus
 Xylocopa varipuncta
 Pogonomyrmex barbatus
+Bombus bimaculatus
+Bombus griseocollis
+Bombus huntii
+Xylocopa micans
+Halictus rubicundus
+Agapostemon virescens
+Vespula maculifrons
+Polistes metricus
+Polistes exclamans
+Camponotus chromaiodes
+Formica fusca
+Myrmica rubra
+Ammophila sabulosa
+Sceliphron curvatum
 
 # --- Dragonflies & damselflies ---
 Anax junius
@@ -190,6 +248,20 @@ Libellula saturata
 Coenagrion puella
 Lestes sponsa
 Anax parthenope
+Aeshna grandis
+Aeshna canadensis
+Libellula cyanea
+Libellula vibrans
+Sympetrum fonscolombii
+Celithemis eponina
+Erythemis vesiculosa
+Calopteryx maculata
+Hetaerina americana
+Argia fumipennis
+Ischnura posita
+Lestes dryas
+Somatochlora metallica
+Pantala hymenaea
 
 # --- Other insects ---
 Mantis religiosa
@@ -219,6 +291,20 @@ Notonecta glauca
 Volucella pellucens
 Hierodula tenuidentata
 Coreus marginatus
+Iris oratoria
+Romalea microptera
+Dissosteira carolina
+Gryllus bimaculatus
+Oecanthus fultoni
+Halyomorpha halys
+Brochymena quadripustulata
+Megatibicen resonans
+Eristalis arbustorum
+Volucella bombylans
+Syrphus vitripennis
+Aquarius remigis
+Neotibicen lyricen
+Pseudomantis albofimbriata
 
 # =========================== SPIDERS & ARACHNIDS ===========================
 Araneus diadematus
@@ -251,6 +337,20 @@ Dolomedes tenebrosus
 Trichonephila clavata
 Misumenoides formosipes
 Eratigena atrica
+Phidippus johnsoni
+Habronattus pyrrithrix
+Marpissa muscosa
+Araneus cavaticus
+Argiope argentata
+Latrodectus geometricus
+Steatoda nobilis
+Xysticus cristatus
+Dolomedes triton
+Tigrosa helluo
+Brachypelma hamorii
+Grammostola rosea
+Aphonopelma hentzi
+Nephila pilipes
 
 # =============================== REPTILES ==================================
 Sceloporus occidentalis
@@ -287,6 +387,21 @@ Hemidactylus frenatus
 Alligator mississippiensis
 Testudo hermanni
 Elgaria multicarinata
+Agkistrodon contortrix
+Lampropeltis triangulum
+Pantherophis guttatus
+Thamnophis elegans
+Natrix helvetica
+Coronella austriaca
+Anolis distichus
+Sceloporus graciosus
+Phrynosoma modestum
+Plestiodon laticeps
+Graptemys geographica
+Pseudemys concinna
+Basiliscus vittatus
+Pogona vitticeps
+Tiliqua scincoides
 
 # ============================== AMPHIBIANS =================================
 Lithobates catesbeianus
@@ -322,6 +437,23 @@ Hyla squirella
 Necturus maculosus
 Bombina bombina
 Gastrophryne carolinensis
+Lithobates palustris
+Rana luteiventris
+Pelophylax esculentus
+Bufotes viridis
+Anaxyrus terrestris
+Incilius valliceps
+Hyla chrysoscelis
+Pseudacris feriarum
+Acris gryllus
+Ambystoma laterale
+Ambystoma jeffersonianum
+Desmognathus fuscus
+Eurycea bislineata
+Salamandra atra
+Triturus marmoratus
+Lissotriton helveticus
+Bombina orientalis
 
 # =============================== MOLLUSKS ==================================
 Cornu aspersum
@@ -350,6 +482,19 @@ Pecten maximus
 Aeolidia papillosa
 Diaulula sandiegensis
 Deroceras reticulatum
+Helix lucorum
+Ariolimax columbianus
+Arion ater
+Limax cinereoniger
+Succinea putris
+Physella acuta
+Pomacea canaliculata
+Littorina saxatilis
+Nucella lamellosa
+Crassostrea virginica
+Aplysia fasciata
+Hermissenda crassicornis
+Megapallifera mutabilis
 
 # ================================ FUNGI ====================================
 Amanita muscaria
@@ -390,6 +535,26 @@ Mycena leaiana
 Marasmius oreades
 Geastrum triplex
 Schizophyllum commune
+Amanita citrina
+Amanita fulva
+Boletus reticulatus
+Leccinum scabrum
+Cantharellus formosus
+Craterellus tubaeformis
+Pleurotus pulmonarius
+Laetiporus cincinnatus
+Ganoderma lucidum
+Trametes hirsuta
+Fomitopsis pinicola
+Pycnoporus cinnabarinus
+Coprinopsis atramentaria
+Chlorophyllum molybdites
+Russula emetica
+Lactarius indigo
+Hericium coralloides
+Morchella americana
+Calvatia gigantea
+Clathrus ruber
 
 # =========================== PLANTS & FLOWERS ==============================
 Helianthus annuus
@@ -444,6 +609,24 @@ Nuphar lutea
 Cornus florida
 Silene dioica
 Campanula rotundifolia
+Monarda didyma
+Echinacea pallida
+Rudbeckia triloba
+Coreopsis lanceolata
+Gaillardia pulchella
+Asclepias incarnata
+Viola sororia
+Viola odorata
+Fragaria vesca
+Potentilla reptans
+Lotus corniculatus
+Medicago sativa
+Lamium purpureum
+Prunella vulgaris
+Ajuga reptans
+Mentha aquatica
+Typha latifolia
+Sagittaria latifolia
 
 # ================================ BIRDS ====================================
 Cardinalis cardinalis
@@ -481,6 +664,27 @@ Alcedo atthis
 Buteo jamaicensis
 Sturnus vulgaris
 Selasphorus rufus
+Passerina cyanea
+Setophaga coronata
+Setophaga ruticilla
+Junco hyemalis
+Zonotrichia leucophrys
+Melospiza melodia
+Troglodytes aedon
+Sialia mexicana
+Turdus philomelos
+Garrulus glandarius
+Corvus corax
+Corvus brachyrhynchos
+Melanerpes carolinus
+Megaceryle alcyon
+Ardea alba
+Egretta thula
+Anas crecca
+Aix sponsa
+Falco tinnunculus
+Buteo lineatus
+Tachycineta bicolor
 
 # =============================== MAMMALS ===================================
 Sciurus carolinensis
@@ -510,6 +714,25 @@ Ursus americanus
 Lynx rufus
 Phoca vitulina
 Odocoileus hemionus
+Vulpes lagopus
+Canis lupus
+Puma concolor
+Lynx canadensis
+Ursus arctos
+Nasua narica
+Spilogale putorius
+Taxidea taxus
+Marmota flaviventris
+Marmota marmota
+Sciurus aberti
+Glaucomys volans
+Castor fiber
+Ondatra zibethicus
+Erethizon dorsatum
+Sylvilagus audubonii
+Lepus californicus
+Enhydra lutris
+Lutra lutra
 
 # =========================== MARINE INVERTEBRATES ==========================
 Asterias rubens
@@ -540,3 +763,23 @@ Chrysaora fuscescens
 Anthopleura xanthogrammica
 Octopus rubescens
 Panulirus interruptus
+Pisaster giganteus
+Evasterias troschelii
+Mediaster aequalis
+Strongylocentrotus droebachiensis
+Mesocentrotus franciscanus
+Cancer magister
+Hemigrapsus oregonensis
+Uca pugilator
+Pagurus samuelis
+Octopus bimaculoides
+Enteroctopus dofleini
+Metridium senile
+Urticina crassicornis
+Anthopleura sola
+Aurelia labiata
+Chrysaora colorata
+Velella velella
+Triopha maculata
+Mytilus galloprovincialis
+Crassostrea gigas

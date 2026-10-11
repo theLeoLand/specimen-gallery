@@ -68,9 +68,13 @@ namespace :specimen do
     abort("No species found in #{species_file}") if all_species.empty?
 
     selected = select_species(all_species, species_per_run)
+    selected_counts = imported_counts_by_name(selected)
+    fresh = selected.count { |name| (selected_counts[name.downcase] || 0).zero? }
     log.call("Species file: #{species_file} (#{all_species.size} listed)")
     log.call("This run: #{selected.size} species x #{per_species} each " \
              "(up to #{selected.size * per_species} specimens) | mode: #{ingest_mode(opts)}")
+    log.call("Rotation: #{fresh} not yet imported, #{selected.size - fresh} circling back " \
+             "(untouched species are always finished before a repeat)")
     log.call("Selected: #{selected.join(', ')}")
 
     ensure_rembg!(opts[:dry_run])
@@ -114,8 +118,14 @@ def ingest_taxon(taxon_name, limit:, photo_size:, publish:, dry_run:, download_d
   taxon_name = taxon_name.to_s.strip
   return if taxon_name.blank?
 
-  photos = InaturalistClient.cc0_photos(taxon_name: taxon_name, limit: limit, photo_size: photo_size)
-  log.call("#{taxon_name}: found #{photos.size} CC0 candidate photo(s).")
+  # First visits only need `limit` photos. A repeat visit pages further down so we
+  # don't keep fetching the same top-voted images we already stored.
+  already = imported_counts_by_name([ taxon_name ])[taxon_name.downcase].to_i
+  scan = already.positive? ? [ limit * 12, 60 ].max : limit
+  candidates = InaturalistClient.cc0_photos(taxon_name: taxon_name, limit: scan, photo_size: photo_size)
+  photos = candidates.reject { |photo| already_imported_record?(photo) }.first(limit)
+  log.call("#{taxon_name}: #{candidates.size} CC0 candidate(s), #{photos.size} new " \
+           "(#{candidates.size - photos.size} already in the gallery).")
 
   if dry_run
     photos.each_with_index do |p, i|
@@ -130,7 +140,7 @@ def ingest_taxon(taxon_name, limit:, photo_size:, publish:, dry_run:, download_d
     prefix = "(#{i + 1}/#{photos.size})"
     ensure_db_connection! # Neon drops idle sockets during long rembg / laptop sleep
 
-    if already_imported?(photo.photo_id)
+    if already_imported_record?(photo)
       log.call("#{prefix} skip — already imported iNat photo ##{photo.photo_id}")
       stats[:skipped_existing] += 1
       next
@@ -247,11 +257,18 @@ def read_species_file(path)
   end.uniq
 end
 
-# Pick `count` species, prioritizing those with the FEWEST imported specimens so
-# far (ties broken randomly) so coverage spreads across the list over time.
+# Pick `count` species. Untouched names (zero imports) come first and are
+# exhausted before any species is repeated. Only then do we circle back, and
+# we take the ones with the fewest imports so coverage stays even.
 def select_species(species, count)
   counts = imported_counts_by_name(species)
-  species.sort_by { |name| [ counts[name.downcase] || 0, rand ] }.first(count)
+  untouched, started = species.partition { |name| (counts[name.downcase] || 0).zero? }
+
+  picked = untouched.shuffle.first(count)
+  return picked if picked.size >= count
+
+  repeats = started.sort_by { |name| [ counts[name.downcase] || 0, rand ] }
+  picked + repeats.first(count - picked.size)
 end
 
 # Map lowercased scientific name -> count of imported specimens under that taxon.
@@ -282,6 +299,16 @@ end
 def already_imported?(photo_id)
   return false if photo_id.blank?
   with_db { SpecimenAsset.where("qc_flags ->> 'inat_photo_id' = ?", photo_id.to_s).exists? }
+end
+
+# Same iNat photo or the same observation (one image per observation).
+def already_imported_record?(photo)
+  already_imported?(photo.photo_id) || already_imported_observation?(photo.observation_id)
+end
+
+def already_imported_observation?(observation_id)
+  return false if observation_id.blank?
+  with_db { SpecimenAsset.where("qc_flags ->> 'inat_observation_id' = ?", observation_id.to_s).exists? }
 end
 
 def with_db
