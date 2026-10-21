@@ -5,14 +5,15 @@ module Admin
 
     ALLOWED_STATUSES = %w[approved rejected pending].freeze
     QUEUE_VIEWS = %w[all review ready].freeze
+    PER_PAGE = 100
 
     def index
       @filter = params[:filter] || "pending"
       @queue = QUEUE_VIEWS.include?(params[:queue]) ? params[:queue] : "all"
 
-      @specimen_assets = admin_asset_scope(status_filter: @filter, queue: @queue)
-        .order(created_at: :desc)
-      @visible_count = admin_asset_scope(status_filter: @filter, queue: @queue).distinct.count(:id)
+      scope = admin_asset_scope(status_filter: @filter, queue: @queue)
+      @visible_count = scope.distinct.count(:id)
+      paginate_admin_index(scope)
 
       counted = admin_asset_scope(status_filter: @filter, queue: "all")
       @queue_counts = {
@@ -82,6 +83,23 @@ module Admin
     end
 
     private
+
+    def paginate_admin_index(scope)
+      @total_pages = [ (@visible_count / PER_PAGE.to_f).ceil, 1 ].max
+      @page = params[:page].to_i
+      @page = 1 if @page < 1
+      @page = @total_pages if @page > @total_pages
+      @range_start = @visible_count.zero? ? 0 : ((@page - 1) * PER_PAGE) + 1
+      @range_end = [ @page * PER_PAGE, @visible_count ].min
+
+      # id breaks ties when a batch import shares one created_at, so pages don't
+      # skip or repeat rows.
+      @specimen_assets = scope
+        .order(created_at: :desc, id: :desc)
+        .offset((@page - 1) * PER_PAGE)
+        .limit(PER_PAGE)
+        .preload(:taxon, image_attachment: :blob)
+    end
 
     def admin_asset_scope(status_filter:, queue: "all")
       scope = case status_filter

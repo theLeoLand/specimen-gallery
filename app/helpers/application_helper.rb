@@ -143,6 +143,16 @@ module ApplicationHelper
     content_tag(:script, json.html_safe, type: "application/ld+json")
   end
 
+  # Keep the admin queue, status tab, and search when paging. Page 1 stays unnumbered.
+  def admin_specimen_page_path(page)
+    admin_specimen_assets_path(
+      filter: @filter,
+      queue: @queue,
+      q: params[:q].presence,
+      page: (page.to_i <= 1 ? nil : page)
+    )
+  end
+
   # Preserve browse filters when paging. Compact so blank filters don't pollute URLs.
   def browse_query_params(overrides = {})
     {
