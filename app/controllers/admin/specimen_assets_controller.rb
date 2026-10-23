@@ -48,12 +48,12 @@ module Admin
     def destroy
       @specimen_asset = SpecimenAsset.find(params[:id])
       nxt = next_queue_item(@specimen_asset) if params[:next].present?
-      @specimen_asset.destroy
+      @specimen_asset.reject_from_queue!
 
       if nxt
         redirect_to edit_admin_specimen_asset_path(nxt), notice: "Specimen rejected. Next up →"
       else
-        redirect_to admin_specimen_assets_path, notice: params[:next].present? ? "Specimen rejected. Queue clear." : "Specimen deleted."
+        redirect_to admin_specimen_assets_path, notice: params[:next].present? ? "Specimen rejected. Queue clear." : "Specimen rejected."
       end
     end
 
@@ -104,7 +104,7 @@ module Admin
     def admin_asset_scope(status_filter:, queue: "all")
       scope = case status_filter
       when "approved" then SpecimenAsset.where(status: "approved")
-      when "all" then SpecimenAsset.all
+      when "all" then SpecimenAsset.where.not(status: "rejected")
       else SpecimenAsset.where(status: "pending")
       end
 
@@ -183,6 +183,18 @@ module Admin
 
       # Compute the next item before the status change removes it from this queue.
       nxt = next_queue_item(@specimen_asset) if params[:next].present?
+
+      if new_status == "rejected"
+        @specimen_asset.reject_from_queue!
+        if nxt
+          redirect_to edit_admin_specimen_asset_path(nxt), notice: "Specimen rejected. Next up →"
+        elsif params[:next].present?
+          redirect_to admin_specimen_assets_path, notice: "Specimen rejected. Queue clear."
+        else
+          redirect_back fallback_location: admin_specimen_assets_path, notice: "Specimen rejected."
+        end
+        return
+      end
 
       if @specimen_asset.update(status: new_status)
         if nxt

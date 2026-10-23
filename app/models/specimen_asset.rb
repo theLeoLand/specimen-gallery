@@ -151,6 +151,18 @@ class SpecimenAsset < ApplicationRecord
     end
   }
 
+  # Soft-reject an imported specimen: keep the database row with status="rejected"
+  # so the ingest pipeline remembers both the taxon visit and the iNat photo/observation
+  # IDs (never re-downloading them), while purging the S3 image blob to save storage.
+  def reject_from_queue!
+    if imported?
+      image.purge if image.attached?
+      update_columns(status: "rejected", needs_review: false, updated_at: Time.current)
+    else
+      destroy!
+    end
+  end
+
   private
 
   def default_status
@@ -159,6 +171,8 @@ class SpecimenAsset < ApplicationRecord
   end
 
   def image_attached
+    return if status == "rejected"
+
     errors.add(:image, "must be attached") unless image.attached?
   end
 
@@ -192,6 +206,18 @@ class SpecimenAsset < ApplicationRecord
   def compute_sha256_hash
     return unless image.attached?
     return if sha256_hash.present?
+
+    staged = attachment_changes["image"]
+    if staged.respond_to?(:attachable) && staged.attachable.respond_to?(:path) && File.exist?(staged.attachable.path)
+      self.sha256_hash = Digest::SHA256.file(staged.attachable.path).hexdigest
+      return
+    elsif staged.respond_to?(:attachable) && staged.attachable.is_a?(Hash) && staged.attachable[:io].respond_to?(:path)
+      io_path = staged.attachable[:io].path
+      if io_path && File.exist?(io_path)
+        self.sha256_hash = Digest::SHA256.file(io_path).hexdigest
+        return
+      end
+    end
 
     image.blob.open do |file|
       self.sha256_hash = Digest::SHA256.file(file.path).hexdigest

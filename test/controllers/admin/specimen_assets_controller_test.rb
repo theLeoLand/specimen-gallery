@@ -49,6 +49,53 @@ module Admin
       assert_match(/1\s+result/, response.body)
     end
 
+    test "rejecting an imported specimen keeps a rejected tombstone and purges its image" do
+      asset = @taxon.specimen_assets.build(
+        specimen_name: "Imported Iguana",
+        status: "pending",
+        license: "CC0",
+        qc_flags: {
+          "import_source" => "inaturalist",
+          "inat_photo_id" => "999888",
+          "inat_observation_id" => "777666"
+        }
+      )
+      asset.image.attach(
+        io: File.open(Rails.root.join("test/fixtures/files/test_image.png")),
+        filename: "iguana.png",
+        content_type: "image/png"
+      )
+      asset.save!
+      assert asset.sha256_hash.present?
+
+      assert_no_difference -> { SpecimenAsset.count } do
+        delete admin_specimen_asset_path(asset), headers: @auth_headers
+      end
+
+      asset.reload
+      assert_equal "rejected", asset.status
+      assert_not asset.image.attached?
+      assert SpecimenAsset.where("qc_flags ->> 'inat_photo_id' = ?", "999888").exists?
+    end
+
+    test "rejecting a manual upload deletes the record" do
+      asset = @taxon.specimen_assets.build(
+        specimen_name: "Manual Upload",
+        status: "pending",
+        license: "CC0"
+      )
+      asset.image.attach(
+        io: File.open(Rails.root.join("test/fixtures/files/test_image.png")),
+        filename: "manual.png",
+        content_type: "image/png"
+      )
+      asset.save!
+
+      assert_difference -> { SpecimenAsset.count }, -1 do
+        delete admin_specimen_asset_path(asset), headers: @auth_headers
+      end
+    end
+
     private
 
     def insert_approved(count)

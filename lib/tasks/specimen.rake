@@ -168,7 +168,7 @@ def ingest_taxon(taxon_name, limit:, photo_size:, publish:, dry_run:, download_d
         next
       end
 
-      resolution = TaxonResolver.call(photo.scientific_name)
+      resolution = with_db { TaxonResolver.call(photo.scientific_name) }
       taxon = resolution.taxon
 
       # A QC flag forces review regardless of GBIF match quality.
@@ -181,6 +181,7 @@ def ingest_taxon(taxon_name, limit:, photo_size:, publish:, dry_run:, download_d
         needs_review: needs_review,
         status: needs_review ? "pending" : "approved",
         bg_removed: true,
+        sha256_hash: Digest::SHA256.file(cutout).hexdigest,
         notes: nil, # provenance is admin-only; kept in qc_flags, never public
         qc_flags: provenance_flags(photo, qc)
       )
@@ -191,8 +192,8 @@ def ingest_taxon(taxon_name, limit:, photo_size:, publish:, dry_run:, download_d
         content_type: "image/png"
       )
 
-      if asset.save
-        asset.apply_descriptive_filename! # SEO-friendly image/download filename
+      if with_db { asset.save }
+        with_db { asset.apply_descriptive_filename! } # SEO-friendly image/download filename
         qc_note = qc.flag? ? ", qc:#{qc.reasons.join('/')}" : ""
         log.call("#{prefix} created ##{asset.id} — #{photo.scientific_name} " \
                  "[#{asset.status}#{needs_review ? ', needs_review' : ''}#{qc_note}]")
@@ -271,16 +272,20 @@ def select_species(species, count)
   picked + repeats.first(count - picked.size)
 end
 
-# Map lowercased scientific name -> count of imported specimens under that taxon.
+# Map lowercased scientific name -> count of imported specimens under that taxon
+# (including rejected ones, so rejecting all 5 photos of a species still counts
+# as having visited that species rather than treating it as untouched).
 def imported_counts_by_name(names)
   return {} if names.empty?
 
-  SpecimenAsset
-    .joins(:taxon)
-    .where("specimen_assets.qc_flags ->> 'import_source' IS NOT NULL")
-    .where("LOWER(taxa.scientific_name) IN (?)", names.map(&:downcase))
-    .group("LOWER(taxa.scientific_name)")
-    .count
+  with_db do
+    SpecimenAsset
+      .joins(:taxon)
+      .where("specimen_assets.qc_flags ->> 'import_source' IS NOT NULL")
+      .where("LOWER(taxa.scientific_name) IN (?)", names.map(&:downcase))
+      .group("LOWER(taxa.scientific_name)")
+      .count
+  end
 end
 
 # --- shared helpers ----------------------------------------------------------
