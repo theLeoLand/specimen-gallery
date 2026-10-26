@@ -126,16 +126,10 @@
     <% end %>
   </div>
 
-  <!-- Gallery totals (always). Search/filter match count only when narrowed. -->
-  <% narrowed = @current_group.present? || params[:q].present? || @filters&.values&.any?(&:present?) || (@id_status_filter.present? && @id_status_filter != "all") %>
   <div class="text-center mb-6">
     <p class="text-sm text-stone-500 dark:text-stone-400">
-      <% if narrowed %>
-        <%= @total_count %> <%= "result".pluralize(@total_count) %>
-        <% if params[:q].present? %>for "<%= params[:q] %>"<% end %>
-        ·
-      <% end %>
       <%= number_with_delimiter(@gallery_species_count) %> <%= "species".pluralize(@gallery_species_count) %>
+      <% if params[:q].present? %>for "<%= params[:q] %>"<% end %>
       ·
       <%= number_with_delimiter(@gallery_image_count) %> <%= "image".pluralize(@gallery_image_count) %>
     </p>

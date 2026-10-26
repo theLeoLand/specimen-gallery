@@ -54,8 +54,8 @@ class TaxaController < ApplicationController
     end
 
     @taxa = @taxa.order(:scientific_name)
-    @gallery_species_count = Taxon.with_approved_assets.count
-    @gallery_image_count = SpecimenAsset.where(status: "approved").count
+    @gallery_species_count = matching_species_count
+    @gallery_image_count = matching_image_count
     paginate_browse
   end
 
@@ -93,12 +93,33 @@ class TaxaController < ApplicationController
   private
 
   def paginate_browse
-    @total_count = @taxa.except(:order).count
-    @total_count = @total_count.size if @total_count.is_a?(Hash)
+    @total_count = @gallery_species_count
     @total_pages = [ (@total_count / BROWSE_PER_PAGE.to_f).ceil, 1 ].max
     @page = params[:page].to_i
     @page = 1 if @page < 1
     @page = @total_pages if @page > @total_pages
     @taxa = @taxa.offset((@page - 1) * BROWSE_PER_PAGE).limit(BROWSE_PER_PAGE)
+  end
+
+  def matching_species_count
+    count = @taxa.except(:order).count
+    count.is_a?(Hash) ? count.size : count
+  end
+
+  def matching_image_count
+    taxon_ids = @taxa.except(:order).reselect("taxa.id")
+    scope = SpecimenAsset.where(status: "approved").where(taxon_id: taxon_ids)
+
+    scope = case @id_status_filter
+    when "verified" then scope.where(id_status: "verified")
+    when "unverified" then scope.where.not(id_status: "verified")
+    else scope
+    end
+
+    scope = scope.where(sex: @filters[:sex]) if @filters[:sex].present?
+    scope = scope.where(life_stage: @filters[:life_stage]) if @filters[:life_stage].present?
+    scope = scope.where(view: @filters[:view]) if @filters[:view].present?
+    scope = scope.where(part: @filters[:part]) if @filters[:part].present?
+    scope.count
   end
 end
