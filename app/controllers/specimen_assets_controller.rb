@@ -10,6 +10,7 @@ class SpecimenAssetsController < ApplicationController
 
   def show
     @specimen_asset = SpecimenAsset.includes(:taxon, :top_suggested_taxon).find(params[:id])
+    @related_specimens = SpecimenEmbedder.related_assets(@specimen_asset)
   end
 
   def new

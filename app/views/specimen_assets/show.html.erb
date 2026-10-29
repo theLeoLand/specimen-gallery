@@ -126,5 +126,28 @@
       </div>
     </div>
   </div>
+
+  <% if @related_specimens.any? %>
+    <section class="mt-12" aria-label="Related specimens">
+      <h2 class="font-serif text-2xl text-stone-900 dark:text-stone-100 mb-4">Related specimens</h2>
+      <div class="grid grid-cols-3 sm:grid-cols-6 gap-4">
+        <% @related_specimens.each do |specimen| %>
+          <%= link_to specimen_asset_path(specimen), class: "group block" do %>
+            <div class="aspect-square bg-gradient-to-br from-stone-100 to-stone-200 dark:from-stone-700 dark:to-stone-600 rounded-xl overflow-hidden ring-1 ring-stone-200 dark:ring-stone-700 group-hover:ring-amber-400 transition-all">
+              <% if specimen.image.attached? %>
+                <%= image_tag specimen_image_src(specimen),
+                  alt: specimen_alt_text(specimen),
+                  loading: "lazy",
+                  class: "w-full h-full object-contain p-2" %>
+              <% end %>
+            </div>
+            <p class="mt-2 text-xs italic text-stone-600 dark:text-stone-400 group-hover:text-amber-700 dark:group-hover:text-amber-500 truncate">
+              <%= specimen.taxon.scientific_name %>
+            </p>
+          <% end %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
 </div>
 

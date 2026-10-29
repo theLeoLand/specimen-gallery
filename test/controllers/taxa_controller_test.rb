@@ -17,6 +17,14 @@ class TaxaControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "results"
   end
 
+  test "browse search by a stored name returns that species" do
+    get browse_path, params: { q: "Plant" }
+    assert_response :success
+    assert_includes response.body, "Browse Plantus"
+    assert_includes response.body, "1 species"
+    assert_not_includes response.body, "Browse Insectus"
+  end
+
   test "browse search finds a specimen by meaning when the typed words are not stored" do
     near = Array.new(384, 0.0)
     near[0] = 1.0

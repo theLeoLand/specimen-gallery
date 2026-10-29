@@ -7,6 +7,10 @@ class SpecimenEmbedder
   # Unrelated lookalikes, like a frog for "ladybug", start around 0.45.
   MAX_DISTANCE = 0.40
   RESULT_LIMIT = 40
+  # Stored name against stored name sits closer than a typed search against a name.
+  # Two frogs land near 0.25. A honey bee against a frog is already past 0.40.
+  RELATED_MAX_DISTANCE = 0.32
+  RELATED_LIMIT = 6
 
   def self.store!(asset)
     text = document_for(asset)
@@ -61,6 +65,36 @@ class SpecimenEmbedder
       .map(&:id)
   rescue StandardError => e
     Rails.logger.warn("Semantic specimen search failed: #{e.class}: #{e.message}")
+    []
+  end
+
+  # Other approved species whose stored names sit close to this one.
+  # One photo per species. Same species is skipped; that page already shows those.
+  def self.related_assets(asset, limit: RELATED_LIMIT)
+    return [] if asset.nil? || asset.embedding.blank? || asset.taxon_id.blank?
+
+    scope = SpecimenAsset.where(status: "approved")
+      .where.not(taxon_id: asset.taxon_id)
+      .joins(:image_attachment)
+    group = asset.taxon&.group
+    scope = scope.joins(:taxon).where(taxa: { group: group }) if group.present? && group != "other"
+
+    candidates = scope.nearest_neighbors(:embedding, asset.embedding, distance: "cosine", threshold: RELATED_MAX_DISTANCE)
+      .includes(:taxon, image_attachment: :blob)
+      .limit(limit * 8)
+
+    picked = []
+    seen_taxa = {}
+    candidates.each do |candidate|
+      next if seen_taxa[candidate.taxon_id]
+
+      seen_taxa[candidate.taxon_id] = true
+      picked << candidate
+      break if picked.size >= limit
+    end
+    picked
+  rescue StandardError => e
+    Rails.logger.warn("Related specimens failed: #{e.class}: #{e.message}")
     []
   end
 

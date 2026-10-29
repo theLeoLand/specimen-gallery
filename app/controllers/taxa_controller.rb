@@ -58,6 +58,10 @@ class TaxaController < ApplicationController
         .distinct
     end
 
+    # The gallery scopes join specimens and call DISTINCT. Postgres rejects an
+    # ORDER BY expression (the "exact name first" rank) unless that expression
+    # is also selected. Collapse to ids first, then sort the plain taxon rows.
+    @taxa = Taxon.where(id: @taxa.except(:order).reselect("taxa.id"))
     @taxa = if @text_match_ids.present?
       list = @text_match_ids.map(&:to_i).join(",")
       @taxa.order(Arel.sql("CASE WHEN taxa.id IN (#{list}) THEN 0 ELSE 1 END"), :scientific_name)
