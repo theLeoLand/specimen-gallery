@@ -3,6 +3,7 @@ class SpecimenAsset < ApplicationRecord
   belongs_to :taxon
   belongs_to :top_suggested_taxon, class_name: "Taxon", optional: true
   has_one_attached :image
+  has_neighbors :embedding
   has_many :flags, dependent: :destroy
   has_many :id_votes, dependent: :destroy
 
@@ -29,6 +30,7 @@ class SpecimenAsset < ApplicationRecord
   before_validation :default_status
   before_validation :compute_sha256_hash
   before_create :generate_submission_token
+  after_commit :refresh_embedding, on: [ :create, :update ]
 
   # Delegate scientific_name for convenience (from taxon)
   delegate :scientific_name, to: :taxon, allow_nil: true
@@ -161,6 +163,15 @@ class SpecimenAsset < ApplicationRecord
     else
       destroy!
     end
+  end
+
+  def refresh_embedding
+    return if Rails.env.test?
+    return if status == "rejected"
+
+    SpecimenEmbedder.store!(self)
+  rescue StandardError => e
+    Rails.logger.warn("Embedding failed for specimen #{id}: #{e.class}: #{e.message}")
   end
 
   private

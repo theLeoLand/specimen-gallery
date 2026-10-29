@@ -17,6 +17,23 @@ class TaxaControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "results"
   end
 
+  test "browse search finds a specimen by meaning when the typed words are not stored" do
+    near = Array.new(384, 0.0)
+    near[0] = 1.0
+    far = Array.new(384, 0.0)
+    far[1] = 1.0
+    @plant.specimen_assets.each { |asset| asset.update_column(:embedding, near) }
+    @insect.specimen_assets.each { |asset| asset.update_column(:embedding, far) }
+
+    with_query_vector(near) do
+      get browse_path, params: { q: "ladybug" }
+    end
+
+    assert_response :success
+    assert_includes response.body, "Browse Plantus"
+    assert_not_includes response.body, "Browse Insectus"
+  end
+
   test "browse totals follow the category filter" do
     get browse_path, params: { group: "plant" }
     assert_response :success
@@ -27,6 +44,14 @@ class TaxaControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
+
+  def with_query_vector(vector)
+    original = SpecimenEmbedder.method(:embed_query)
+    SpecimenEmbedder.define_singleton_method(:embed_query) { |_query| vector }
+    yield
+  ensure
+    SpecimenEmbedder.define_singleton_method(:embed_query) { |query| original.call(query) }
+  end
 
   def attach_approved(taxon, name)
     asset = taxon.specimen_assets.build(

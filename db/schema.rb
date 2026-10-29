@@ -10,9 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_31_153854) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_28_213000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+  enable_extension "vector"
 
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
@@ -78,6 +79,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_31_153854) do
     t.string "common_name"
     t.integer "confirm_count", default: 0, null: false
     t.datetime "created_at", null: false
+    t.vector "embedding", limit: 384
     t.string "id_status", default: "unverified", null: false
     t.string "license"
     t.string "life_stage"
@@ -100,6 +102,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_31_153854) do
     t.datetime "updated_at", null: false
     t.string "view"
     t.index ["bg_removed"], name: "index_specimen_assets_on_bg_removed"
+    t.index ["embedding"], name: "index_specimen_assets_on_embedding", opclass: :vector_cosine_ops, using: :hnsw
     t.index ["id_status"], name: "index_specimen_assets_on_id_status"
     t.index ["life_stage"], name: "index_specimen_assets_on_life_stage"
     t.index ["needs_review"], name: "index_specimen_assets_on_needs_review"

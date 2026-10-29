@@ -49,6 +49,32 @@ module Admin
       assert_match(/1\s+result/, response.body)
     end
 
+    test "admin search finds a specimen by embedding when the name does not match" do
+      asset = @taxon.specimen_assets.build(
+        specimen_name: "Zzxylophone",
+        status: "pending",
+        license: "CC0"
+      )
+      asset.image.attach(
+        io: File.open(Rails.root.join("test/fixtures/files/test_image.png")),
+        filename: "semantic.png",
+        content_type: "image/png"
+      )
+      asset.save!
+      vector = Array.new(384, 0.0)
+      vector[0] = 1.0
+      asset.update_column(:embedding, vector)
+
+      original = SpecimenEmbedder.method(:embed_query)
+      SpecimenEmbedder.define_singleton_method(:embed_query) { |_query| vector }
+      get admin_specimen_assets_path(filter: "pending", q: "ladybug"), headers: @auth_headers
+    ensure
+      SpecimenEmbedder.define_singleton_method(:embed_query) { |query| original.call(query) } if original
+
+      assert_response :success
+      assert_includes response.body, "Zzxylophone"
+    end
+
     test "rejecting an imported specimen keeps a rejected tombstone and purges its image" do
       asset = @taxon.specimen_assets.build(
         specimen_name: "Imported Iguana",

@@ -93,9 +93,14 @@ module Admin
       @range_end = [ @page * PER_PAGE, @visible_count ].min
 
       # id breaks ties when a batch import shares one created_at, so pages don't
-      # skip or repeat rows.
-      @specimen_assets = scope
-        .order(created_at: :desc, id: :desc)
+      # skip or repeat rows. Literal search hits stay ahead of embedding matches.
+      ordered = if @search_text_ids.present?
+        list = @search_text_ids.map(&:to_i).join(",")
+        scope.order(Arel.sql("CASE WHEN specimen_assets.id IN (#{list}) THEN 0 ELSE 1 END"), created_at: :desc, id: :desc)
+      else
+        scope.order(created_at: :desc, id: :desc)
+      end
+      @specimen_assets = ordered
         .offset((@page - 1) * PER_PAGE)
         .limit(PER_PAGE)
         .preload(:taxon, image_attachment: :blob)
@@ -121,12 +126,15 @@ module Admin
       return scope if params[:q].blank?
 
       term = "%#{params[:q]}%"
-      scope.left_joins(:taxon).where(
+      text_ids = scope.left_joins(:taxon).where(
         "specimen_assets.specimen_name ILIKE :q OR specimen_assets.common_name ILIKE :q OR " \
         "specimen_assets.morph ILIKE :q OR specimen_assets.region ILIKE :q OR " \
         "taxa.scientific_name ILIKE :q",
         q: term
-      )
+      ).distinct.pluck(:id)
+      semantic_ids = SpecimenEmbedder.matching_specimen_ids(params[:q], scope: scope)
+      @search_text_ids = text_ids
+      scope.where(id: (text_ids + semantic_ids).uniq)
     end
 
     # Prev/Next navigation within the same status queue, matching the index order

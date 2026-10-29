@@ -16,7 +16,7 @@ WORKDIR /rails
 
 # Install base packages
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libjemalloc2 libvips postgresql-client && \
+    apt-get install --no-install-recommends -y curl libgomp1 libjemalloc2 libvips postgresql-client && \
     ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
@@ -53,11 +53,18 @@ RUN bundle exec bootsnap precompile -j 1 app/ lib/
 # Precompiling assets for production without requiring secret RAILS_MASTER_KEY
 RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
 
+# Bake the search model into the image so the first search does not download it.
+ENV XDG_CACHE_HOME=/rails/.cache
+RUN bundle exec ruby -e 'require "informers"; Informers.pipeline("embedding", "Xenova/bge-small-en-v1.5").call("specimen")' && \
+    chown -R 1000:1000 /rails/.cache
+
 
 
 
 # Final stage for app image
 FROM base
+
+ENV XDG_CACHE_HOME=/rails/.cache
 
 # Run and own only the runtime files as a non-root user for security
 RUN groupadd --system --gid 1000 rails && \

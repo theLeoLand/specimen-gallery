@@ -24,10 +24,11 @@ class TaxaController < ApplicationController
       @taxa = @taxa.where(group: @current_group)
     end
 
-    # Search by name, morph, or region
+    # Literal name matches stay first. Embeddings add records whose wording is close
+    # even when the typed text is not stored on the specimen.
     if params[:q].present?
       search_term = "%#{params[:q]}%"
-      @taxa = @taxa
+      text_ids = @taxa
         .left_joins(:specimen_assets)
         .where(
           "taxa.scientific_name ILIKE :q OR specimen_assets.specimen_name ILIKE :q OR " \
@@ -36,6 +37,10 @@ class TaxaController < ApplicationController
           q: search_term
         )
         .distinct
+        .pluck("taxa.id")
+      semantic_ids = SpecimenEmbedder.matching_taxon_ids(params[:q], taxon_scope: @taxa, id_status: @id_status_filter)
+      @text_match_ids = text_ids
+      @taxa = @taxa.where(id: (text_ids + semantic_ids).uniq)
     end
 
     # Filter by specimen traits (only show taxa that have matching specimens)
@@ -53,7 +58,12 @@ class TaxaController < ApplicationController
         .distinct
     end
 
-    @taxa = @taxa.order(:scientific_name)
+    @taxa = if @text_match_ids.present?
+      list = @text_match_ids.map(&:to_i).join(",")
+      @taxa.order(Arel.sql("CASE WHEN taxa.id IN (#{list}) THEN 0 ELSE 1 END"), :scientific_name)
+    else
+      @taxa.order(:scientific_name)
+    end
     @gallery_species_count = matching_species_count
     @gallery_image_count = matching_image_count
     paginate_browse

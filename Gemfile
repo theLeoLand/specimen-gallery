@@ -78,3 +78,7 @@ end
 gem "dockerfile-rails", ">= 1.7", group: :development
 
 gem "aws-sdk-s3", "~> 1.212", require: false
+
+# Semantic search: pgvector storage plus a small local embedding model.
+gem "neighbor"
+gem "informers"

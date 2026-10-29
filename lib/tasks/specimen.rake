@@ -88,6 +88,17 @@ namespace :specimen do
     log.call("Batch done. #{format_stats(stats)}")
   end
 
+  desc "Fill missing specimen embeddings for semantic search"
+  task embed: :environment do
+    scope = SpecimenAsset.where.not(status: "rejected").where(embedding: nil)
+    total = scope.count
+    puts "[specimen:embed] #{total} specimen(s) to embed"
+    scope.find_each.with_index(1) do |asset, index|
+      SpecimenEmbedder.store!(asset)
+      puts "[specimen:embed] #{index}/#{total} ##{asset.id} #{asset.specimen_name}" if (index % 25).zero? || index == total
+    end
+  end
+
   # Rename existing image blobs to SEO-friendly filenames (one-time backfill).
   #   bin/rails specimen:backfill_filenames
   task backfill_filenames: :environment do
