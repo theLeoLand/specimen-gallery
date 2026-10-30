@@ -1,12 +1,14 @@
-<% content_for(:title) { "#{@taxon.scientific_name} — Specimen Gallery" } %>
-<% content_for(:meta_description) { "Browse free CC0 transparent-background cutouts of #{@taxon.scientific_name}. #{pluralize(@specimen_assets.count, "image")} available for download as PNG." } %>
+<% content_for(:title) { taxon_page_title(@taxon, @vernacular_name) } %>
+<% content_for(:meta_description) { taxon_meta_description(@taxon, vernacular: @vernacular_name, count: @specimen_assets.count) } %>
+<% content_for(:og_title) { taxon_page_title(@taxon, @vernacular_name) } %>
+<% content_for(:og_description) { taxon_meta_description(@taxon, vernacular: @vernacular_name, count: @specimen_assets.count) } %>
 <% first_with_image = @specimen_assets.find { |s| s.image.attached? } %>
 <% if first_with_image %>
   <% content_for(:og_image) { specimen_image_url_abs(first_with_image) } %>
 <% end %>
 <% if @specimen_assets.any? %>
   <% content_for(:head) do %>
-    <%= json_ld_tag(taxon_collection_jsonld(@taxon, @specimen_assets)) %>
+    <%= json_ld_tag(taxon_collection_jsonld(@taxon, @specimen_assets, vernacular: @vernacular_name)) %>
   <% end %>
 <% end %>
 
@@ -17,6 +19,9 @@
     <h1 class="font-serif text-4xl text-stone-900 dark:text-stone-100 mb-2 italic">
       <%= @taxon.scientific_name %>
     </h1>
+    <% if @vernacular_name.present? %>
+      <p class="text-lg text-stone-600 dark:text-stone-400 mb-1"><%= @vernacular_name %></p>
+    <% end %>
     <% if @taxon.gbif_rank.present? %>
       <p class="text-stone-500 dark:text-stone-400 text-sm mb-1">Rank: <%= @taxon.gbif_rank.downcase %></p>
     <% end %>
@@ -25,6 +30,9 @@
         <%= @taxon.taxon_source.upcase %> #<%= @taxon.taxon_id %>
       </p>
     <% end %>
+    <p class="text-sm text-stone-500 dark:text-stone-400 mt-3">
+      Cite: <span class="select-all"><%= taxon_citation(@taxon, vernacular: @vernacular_name) %></span>
+    </p>
     <p class="text-stone-600 dark:text-stone-400 mt-2">
       <%= pluralize(@specimen_assets.count, "image") %>
       <% if @id_status_filter.present? && @id_status_filter != "all" %>

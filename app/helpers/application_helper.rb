@@ -63,7 +63,7 @@ module ApplicationHelper
     group = nil if group == "Unknown" || group == "Other"
 
     traits = specimen.trait_chips.map { |chip| chip[:label].to_s }.presence
-    license = specimen.license == "CC0" ? "CC0 transparent PNG, free to use" : "CC-BY transparent PNG"
+    license = specimen.license == "CC0" ? "CC0 transparent PNG cutout, free to use" : "CC BY transparent PNG cutout"
 
     [ title, group, traits&.join(", "), license ].compact.join(". ").concat(".")
   end
@@ -89,6 +89,7 @@ module ApplicationHelper
       "dateModified" => specimen.updated_at&.iso8601,
       "license" => specimen_license_url(specimen),
       "acquireLicensePage" => specimen_asset_url(specimen),
+      "usageInfo" => specimen_citation(specimen),
       "copyrightNotice" => specimen.license == "CC0" ? "CC0 1.0 Universal (Public Domain Dedication)" : "CC BY 4.0",
       "creditText" => specimen.attribution_name.presence,
       "isAccessibleForFree" => true
@@ -119,13 +120,24 @@ module ApplicationHelper
   end
 
   # schema.org CollectionPage + ItemList for a taxon's set of specimens.
-  def taxon_collection_jsonld(taxon, specimens)
-    {
+  def taxon_collection_jsonld(taxon, specimens, vernacular: nil)
+    vernacular ||= taxon.vernacular_name
+    about = { "@type" => "Taxon", "name" => taxon.scientific_name }
+    about["alternateName"] = vernacular if vernacular.present?
+    if taxon.gbif_key.present?
+      about["identifier"] = "https://www.gbif.org/species/#{taxon.gbif_key}"
+      about["sameAs"] = "https://www.gbif.org/species/#{taxon.gbif_key}"
+    end
+
+    data = {
       "@context" => "https://schema.org",
       "@type" => "CollectionPage",
-      "name" => "#{taxon.scientific_name} — CC0 transparent PNG cutouts",
+      "name" => taxon_page_title(taxon, vernacular),
+      "description" => taxon_meta_description(taxon, vernacular: vernacular, count: specimens.size),
       "url" => taxon_url(taxon),
-      "about" => { "@type" => "Taxon", "name" => taxon.scientific_name },
+      "usageInfo" => taxon_citation(taxon, vernacular: vernacular),
+      "isAccessibleForFree" => true,
+      "about" => about,
       "mainEntity" => {
         "@type" => "ItemList",
         "numberOfItems" => specimens.size,
@@ -134,6 +146,55 @@ module ApplicationHelper
         end
       }
     }
+
+    if taxon.public_license_label == "CC0 1.0"
+      data["license"] = CC0_LICENSE_URL
+    elsif taxon.public_license_label == "CC BY 4.0"
+      data["license"] = CC_BY_LICENSE_URL
+    end
+
+    hero = specimens.find { |specimen| specimen.image.attached? }
+    data["image"] = specimen_image_url_abs(hero) if hero
+    data
+  end
+
+  # Title aimed at "[common name] transparent png" and "[scientific name] cutout".
+  def taxon_page_title(taxon, vernacular = nil)
+    subject = citation_subject(taxon.scientific_name, vernacular)
+    "#{subject} transparent PNG cutout — Specimen Gallery"
+  end
+
+  def taxon_meta_description(taxon, vernacular: nil, count: nil)
+    subject = citation_subject(taxon.scientific_name, vernacular)
+    lead = taxon.public_license_label == "CC0 1.0" ? "Free CC0" : "Free"
+    images = count.nil? ? "Images" : pluralize(count, "image")
+    "#{lead} #{subject} transparent PNG cutout. #{images} to download from Specimen Gallery."
+  end
+
+  # One line a figure caption can paste: name, license, canonical URL.
+  def taxon_citation(taxon, vernacular: nil)
+    vernacular = taxon.vernacular_name if vernacular.nil?
+    name = citation_subject(taxon.scientific_name, vernacular)
+    "#{name}. #{taxon.public_license_label}. Specimen Gallery. #{taxon_url(taxon)}"
+  end
+
+  def specimen_citation(specimen)
+    taxon = specimen.taxon
+    name = citation_subject(taxon&.scientific_name, specimen.common_name)
+    traits = specimen.trait_chips.map { |chip| chip[:label].to_s }.presence
+    license = specimen.license == "CC0" ? "CC0 1.0" : "CC BY 4.0"
+    body = [ name, traits&.join(", "), license, "Specimen Gallery" ].compact.join(". ")
+    "#{body}. #{specimen_asset_url(specimen)}"
+  end
+
+  def citation_subject(scientific, vernacular)
+    scientific = scientific.to_s
+    label = vernacular.to_s.strip
+    if label.present? && !label.casecmp?(scientific)
+      "#{scientific} (#{label})"
+    else
+      scientific
+    end
   end
 
   # Render a JSON-LD <script> block safely. Neutralizes <, >, & so user-supplied

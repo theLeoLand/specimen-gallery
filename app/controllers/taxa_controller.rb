@@ -83,7 +83,42 @@ class TaxaController < ApplicationController
       @taxon.approved_assets.includes(image_attachment: :blob)
     end
 
+    @vernacular_name = @taxon.vernacular_name
+
     if @specimen_assets.empty?
+      head :not_found
+    end
+  end
+
+  # Plain-text citation: scientific name, license, canonical taxon URL.
+  def citation
+    taxon = Taxon.find(params[:id])
+    if taxon.approved_assets.none?
+      head :not_found
+      return
+    end
+
+    render plain: helpers.taxon_citation(taxon)
+  end
+
+  # GET /gbif/:gbif_key — permanent redirect onto the canonical taxon page.
+  def gbif
+    taxon = Taxon.with_approved_assets.find_by(gbif_key: params[:gbif_key])
+    if taxon
+      redirect_to taxon_path(taxon), status: :moved_permanently
+    else
+      head :not_found
+    end
+  end
+
+  # GET /gbif/:gbif_key/image — the current hero cutout for that GBIF taxon.
+  def gbif_image
+    taxon = Taxon.find_by(gbif_key: params[:gbif_key])
+    specimen = taxon&.hero_asset
+    if specimen&.image&.attached?
+      redirect_to rails_blob_path(specimen.image, disposition: "inline"),
+        status: :found
+    else
       head :not_found
     end
   end

@@ -1,9 +1,10 @@
 <% scientific = @specimen_asset.taxon.scientific_name %>
 <% display = @specimen_asset.display_name %>
 <% full_name = scientific.present? && scientific != display ? "#{display} (#{scientific})" : display %>
-<% content_for(:title) { "#{full_name} – CC0 Transparent PNG | Specimen Gallery" } %>
+<% license_label = @specimen_asset.license == "CC0" ? "CC0" : "CC BY" %>
+<% content_for(:title) { "#{full_name} – #{license_label} Transparent PNG Cutout | Specimen Gallery" } %>
 <% content_for(:meta_description) { specimen_meta_description(@specimen_asset) } %>
-<% content_for(:og_title) { "#{full_name} – CC0 Transparent PNG" } %>
+<% content_for(:og_title) { "#{full_name} – #{license_label} Transparent PNG Cutout" } %>
 <% content_for(:og_description) { specimen_meta_description(@specimen_asset) } %>
 <% if @specimen_asset.image.attached? %>
   <% content_for(:og_image) { specimen_image_url_abs(@specimen_asset) } %>
@@ -37,6 +38,9 @@
         <%= link_to "Download PNG",
           rails_blob_path(@specimen_asset.image, disposition: "attachment"),
           class: "inline-flex items-center justify-center w-full px-4 py-2 bg-amber-600 text-white font-medium rounded-lg hover:bg-amber-700 transition-colors" %>
+        <p class="text-xs text-stone-500 dark:text-stone-400 select-all">
+          Cite: <%= specimen_citation(@specimen_asset) %>
+        </p>
       <% end %>
     </div>
 

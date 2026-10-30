@@ -13,6 +13,12 @@ class SpecimenAssetsController < ApplicationController
     @related_specimens = SpecimenEmbedder.related_assets(@specimen_asset)
   end
 
+  # Plain-text citation for this image.
+  def citation
+    specimen = SpecimenAsset.includes(:taxon).find(params[:id])
+    render plain: helpers.specimen_citation(specimen)
+  end
+
   def new
     @specimen_asset = SpecimenAsset.new
   end

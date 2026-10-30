@@ -11,9 +11,18 @@ Rails.application.routes.draw do
   get "browse", to: "taxa#index", as: :browse
   get "taxa", to: redirect("/browse")  # Redirect old URL
 
+  # Stable addresses for tools that know a GBIF key and not our taxon id.
+  constraints gbif_key: /\d+/ do
+    get "gbif/:gbif_key/image", to: "taxa#gbif_image", as: :gbif_taxon_image
+    get "gbif/:gbif_key", to: "taxa#gbif", as: :gbif_taxon
+  end
+
   resources :taxa, only: %i[show index] do
     collection do
       get :suggest
+    end
+    member do
+      get :citation
     end
   end
 
@@ -25,6 +34,7 @@ Rails.application.routes.draw do
       post :preview_bg_removal
     end
     member do
+      get :citation
       post :confirm_id
       post :suggest_id
     end
